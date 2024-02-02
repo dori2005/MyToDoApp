@@ -25,7 +25,8 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
     const active = useSharedValue(false);
 
     const scrollTo = useCallback((destination: number) => { // 그저 callback 함수 생성
-        'worklet';  //tried to synchronously call anonymous function from a different thread. 에러 방지(이유는 알아보기)
+        //tried to synchronously call anonymous function from a different thread.
+        //'worklet';  // 위 에러 방지, 과거엔 쓰였는데, 지금은 필요없어진듯
 
         active.value = destination !== 0;
 

@@ -3,18 +3,25 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import HomeScreen from './components/HomeScreen';
 import { NavigationContainer } from '@react-navigation/native'
 import React from 'react'
-import TestNavigator from './components/TestNavigator';
+import TestComponent from './components/TestComponent';
 import { createStackNavigator } from '@react-navigation/stack'
 
-const Stack = createStackNavigator();
+export type RootStackParamList = {
+  Test: undefined;
+  Profile: { userId: string };
+  Feed: { sort: 'latest' | 'top' } | undefined;
+};
+
+//const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator initialRouteName='Test'>
         <Stack.Screen 
-          name='test' 
-          component={TestNavigator}
+          name='Test' 
+          component={TestComponent}
           options={{
             headerLeft: ({onPress}) => (
               <TouchableOpacity onPress={onPress}>
@@ -34,7 +41,7 @@ export default function App() {
           }}
         />
         <Stack.Screen 
-          name='Home' 
+          name='Test' 
           component={HomeScreen}
         />
       </Stack.Navigator>

@@ -8,10 +8,9 @@ import { StatusBar } from 'expo-status-bar';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { createStackNavigator } from '@react-navigation/stack';
 
-const Stack = createStackNavigator();
-
 const {height: SCREEN_HEIGHT} = Dimensions.get('window')
 
+export type HomeScreenProps = StackScreenProps<RootStackParamList, "Home">;
 const HomeScreen = () => {
   const refBS = useRef<BottomSheetRefProps>(null);
   const onPress = useCallback(() => {   //버튼을 누르면
@@ -27,9 +26,11 @@ const HomeScreen = () => {
   let page = 0;
   const today = new Date();
   let targetday:Date;
+
   const toStringYM = (day:Date) => 
     day.getFullYear().toString() + "." + (day.getMonth()+1).toString();
   const [targetYM, setTargetYM] = useState(toStringYM(today));
+
   const onPressNext = useCallback(()=> {
     page++;
     const targetday = new Date(today.getFullYear(), today.getMonth()+page, today.getDate());
@@ -37,6 +38,7 @@ const HomeScreen = () => {
     console.log(targetday.getMonth());
     setTargetYM(toStringYM(targetday));
   },[]);
+
   const onPressPre = useCallback(()=> {
     page--;
     const today = new Date();

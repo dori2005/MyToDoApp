@@ -8,6 +8,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 
 export type RootStackParamList = {
   Test: undefined;
+  Home: undefined;
   Profile: { userId: string };
   Feed: { sort: 'latest' | 'top' } | undefined;
 };
@@ -41,7 +42,7 @@ export default function App() {
           }}
         />
         <Stack.Screen 
-          name='Test' 
+          name='Home' 
           component={HomeScreen}
         />
       </Stack.Navigator>

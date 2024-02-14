@@ -1,17 +1,20 @@
 import BottomSheet, { BottomSheetRefProps } from './BottomSheet';
+import { Button, Dimensions, StyleSheet, Text, View } from 'react-native';
 import Calendar, { CalendarRefProps } from './Calendar';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
-import { useCallback, useRef, useState } from 'react';
+import { StackScreenProps, createStackNavigator } from '@react-navigation/stack';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { RootStackParamList } from '../App';
 import { StatusBar } from 'expo-status-bar';
+import { TestScreenProps } from './TestComponent';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
-import { createStackNavigator } from '@react-navigation/stack';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window')
 
-export type HomeScreenProps = StackScreenProps<RootStackParamList, "Home">;
-const HomeScreen = () => {
+export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
+
+const HomeScreen = ({navigation} : TestScreenProps) => {
   const refBS = useRef<BottomSheetRefProps>(null);
   const onPress = useCallback(() => {   //버튼을 누르면
     const isActive = refBS?.current?.isActive();
@@ -36,7 +39,6 @@ const HomeScreen = () => {
     const targetday = new Date(today.getFullYear(), today.getMonth()+page, today.getDate());
     refCal?.current?.changeDate(targetday);
     console.log(targetday.getMonth());
-    setTargetYM(toStringYM(targetday));
   },[]);
 
   const onPressPre = useCallback(()=> {
@@ -44,9 +46,21 @@ const HomeScreen = () => {
     const today = new Date();
     const targetday = new Date(today.getFullYear(), today.getMonth()+page, today.getDate());
     refCal?.current?.changeDate(targetday);
-    setTargetYM(toStringYM(targetday));
   },[]);
   
+  useEffect(() => {
+    navigation.setOptions({title: targetYM});
+    navigation.setOptions({headerLeft: () => (
+      <View>
+        <Button onPress={()=> onPressPre()} title="Pre"/>
+        <Button onPress={()=> onPressNext()} title="Next"/>
+      </View>
+    )});
+    navigation.setOptions({headerRight: () => (
+      <Button onPress={()=> onPress()} title="UP"/>
+    )});
+  }, [navigation]);
+
   return (
     <GestureHandlerRootView style={{flex:1}}>
     <View style={styles.container}>  

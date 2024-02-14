@@ -19,10 +19,10 @@ const Stack = createStackNavigator<RootStackParamList>();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='Test'>
+      <Stack.Navigator initialRouteName='Home'>
         <Stack.Screen 
-          name='Test' 
-          component={TestComponent}
+          name='Home' 
+          component={HomeScreen}
           options={{
             headerLeft: ({onPress}) => (
               <TouchableOpacity onPress={onPress}>
@@ -42,8 +42,8 @@ export default function App() {
           }}
         />
         <Stack.Screen 
-          name='Home' 
-          component={HomeScreen}
+          name='Test' 
+          component={TestComponent}
         />
       </Stack.Navigator>
     </NavigationContainer>

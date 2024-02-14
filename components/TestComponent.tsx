@@ -1,5 +1,5 @@
+import { Button, StyleSheet, Text, View } from 'react-native'
 import React, { useEffect } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
 
 import { RootStackParamList } from '../App';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -9,6 +9,11 @@ export type TestScreenProps = StackScreenProps<RootStackParamList, "Test">; // R
 const TestComponent = ({ navigation } : TestScreenProps) => {
     useEffect(() => {
       navigation.setOptions({title: '테스트'});
+      navigation.setOptions({headerLeft: () => (
+        <Button onPress={()=> {
+          console.log("Push left");
+        }} title="test"/>
+      )});
     }, [navigation]);
   return (
     <View>

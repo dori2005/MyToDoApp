@@ -14,7 +14,7 @@ const {height: SCREEN_HEIGHT} = Dimensions.get('window')
 
 export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
-const HomeScreen = ({navigation} : TestScreenProps) => {
+const HomeScreen = ({navigation} : HomeScreenProps) => {
   const refBS = useRef<BottomSheetRefProps>(null);
   const onPress = useCallback(() => {   //버튼을 누르면
     const isActive = refBS?.current?.isActive();
@@ -57,7 +57,12 @@ const HomeScreen = ({navigation} : TestScreenProps) => {
       </View>
     )});
     navigation.setOptions({headerRight: () => (
-      <Button onPress={()=> onPress()} title="UP"/>
+      <View>
+        <Button onPress={()=> {
+          navigation.push('Login');
+        }} title="Login"/>
+        <Button onPress={()=> onPress()} title="UP"/>
+      </View>
     )});
   }, [navigation]);
 

@@ -12,8 +12,8 @@ const MAX_TRANSLATE_Y = -SCREEN_HEIGHT+200  //맨 아래가 0에서부터 맨 �
 
 const BottomSheetJS = React.forwardRef(
     ({children}, ref) => {  //(하위 컴포넌트, 파라미터)
-    const translateY = useSharedValue(-50)
-    const active = useSharedValue(true);
+    const translateY = useSharedValue(0)
+    const active = useSharedValue(false);
 
     const scrollTo = useCallback((destination) => { // 그저 callback 함수 생성
         //tried to synchronously call anonymous function from a different thread.
@@ -79,7 +79,7 @@ const BottomSheetJS = React.forwardRef(
   )
 })
 
-export default BottomSheetJS
+export default BottomSheet
 
 const styles = StyleSheet.create({
     bottomSheetContainer: {

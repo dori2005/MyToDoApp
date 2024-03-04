@@ -1,4 +1,4 @@
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native'
 import React, { useState } from 'react'
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,37 +20,45 @@ const LoginScreen = ({ navigation } : TestScreenProps) => {
         // saving error
       }
     };
-    const onClick = async () => {
-        await fetch('http://localhost:3001/login-token', {
-            method: "POST",
-            headers: {
-              'Content-Type' : 'application/json',
-            },
-            body: JSON.stringify({
-              id : idText,
-              pw : pwText,
-            })
-          })
-          .then((response) => {
-            if (response.status === 200) {
-              console.log("로그인 성공");
-            } else if (response.status === 403) {
-              return response.json();
-            }
-          })
-          .then((data) => {
-            console.log(data);
-            saveLoginData(data);
-          })
-          .catch((error) => {
-            console.error('Error message:', error.message);
-          })
 
-        setIdText('');
-        setPwText('');
+    const signAlert = (a:string, b:string) => {
+      Alert.alert(a,b, [
+        {text: 'OK', onPress: () => console.log('OK Pressed')},
+      ],
+      {cancelable: false});
+    }
+
+    const onClick = async () => {
+      await fetch('http://localhost:3001/login-token', {
+        method: "POST",
+        headers: {
+          'Content-Type' : 'application/json',
+        },
+        body: JSON.stringify({
+          id : idText,
+          pw : pwText,
+        })
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          signAlert('로그인 성공', '로그인되었습니다.');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log(data);
+        saveLoginData(JSON.stringify(data));
+      })
+      .catch((error) => {
+        console.error('Error message:', error.message);
+      })
+        
+      setIdText('');
+      setPwText('');
+      navigation.popToTop();
     }
     const signUp = async() => {
-      await fetch('http://localhost:3001/sign', {
+      await fetch('http://localhost:3001/user', {
             method: "POST",
             headers: {
               'Content-Type' : 'application/json',
@@ -62,8 +70,10 @@ const LoginScreen = ({ navigation } : TestScreenProps) => {
           })
           .then((response) => {
             if (response.status === 200) {
+              signAlert('회원가입 성공', '회원가입에 성공하였습니다.');
               console.log("회원가입 성공");
             }
+            return response.json();
           })
           .then((data) => {
             console.log(data);

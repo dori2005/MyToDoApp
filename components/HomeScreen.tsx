@@ -4,6 +4,7 @@ import Calendar, { CalendarRefProps } from './Calendar';
 import { StackScreenProps, createStackNavigator } from '@react-navigation/stack';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootStackParamList } from '../App';
 import { StatusBar } from 'expo-status-bar';
@@ -14,7 +15,33 @@ const {height: SCREEN_HEIGHT} = Dimensions.get('window')
 
 export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
+const STORAGE_KEY_LOGIN = "@LoginData"
+
 const HomeScreen = ({navigation} : HomeScreenProps) => {
+  const [loginData, setLoginData] = useState("");
+  const [login, setLogin] = useState("");
+
+  const loadLoginData = async () => {
+    try {
+      const s = await AsyncStorage.getItem(STORAGE_KEY_LOGIN)
+      if (s!=null) {
+        setLoginData(JSON.parse(s));
+        setLogin("true");
+      }
+    } catch (e) {
+    }
+  };
+  
+  const removeLoginData = async () => {
+    try {
+      setLoginData("");
+      setLogin("false");
+      await AsyncStorage.removeItem(STORAGE_KEY_LOGIN) //Object를 String으로
+    } catch (e) {
+      // saving error
+    }
+  };
+
   const refBS = useRef<BottomSheetRefProps>(null);
   const onPress = useCallback(() => {   //버튼을 누르면
     const isActive = refBS?.current?.isActive();
@@ -50,6 +77,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
 
   
   useEffect(() => {
+    loadLoginData();
     navigation.setOptions({title: targetYM});
     navigation.setOptions({headerLeft: () => (
       <View>
@@ -59,9 +87,16 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     )});
     navigation.setOptions({headerRight: () => (
       <View>
-        <Button onPress={()=> {
-          navigation.push("Login");
-        }} title="Login"/>
+        {login==="true"?(
+          <Button onPress={()=> {
+            removeLoginData();
+          }} title="Logout"/>
+        ):(
+          <Button onPress={()=> {
+            console.log(loginData);
+            navigation.push("Login");
+          }} title="Login"/>
+        )}
         <Button onPress={()=> onPress()} title="UP"/>
       </View>
     )});
@@ -125,5 +160,8 @@ const styles = StyleSheet.create({
       backgroundColor: 'black',
       position: 'absolute',
       top: -SCREEN_HEIGHT,
+  },
+  right_top: {
+      flexDirection: "row",
   },
 });

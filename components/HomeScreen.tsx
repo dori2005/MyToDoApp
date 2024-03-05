@@ -19,7 +19,7 @@ export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 const STORAGE_KEY_LOGIN = "@LoginData"
 
 const HomeScreen = ({navigation} : HomeScreenProps) => {
-  const [loginData, setLoginData] = useState("");
+  const [loginData, setLoginData] = useState({});
   const [login, setLogin] = useState(false);
   
   const loadLoginData = async () => {
@@ -35,9 +35,26 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   
   const removeLoginData = async () => {
     try {
-      setLoginData("");
-      setLogin(false);
+      await fetch('http://localhost:3001/login-token', {
+        method: "DELETE",
+        headers: {
+          'Content-Type' : 'application/json',
+        },
+        body: JSON.stringify(loginData)
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          return response.json;
+        }
+      })
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => {
+        console.error('Error message:', error.message);
+      })
       await AsyncStorage.removeItem(STORAGE_KEY_LOGIN) //Object를 String으로
+      setLogin(false);
     } catch (e) {
       // saving error
     }

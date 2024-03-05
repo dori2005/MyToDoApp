@@ -42,12 +42,17 @@ const LoginScreen = ({ navigation } : TestScreenProps) => {
       .then((response) => {
         if (response.status === 200) {
           signAlert('로그인 성공', '로그인되었습니다.');
+          console.log("로그인 성공");
+          return response.json();
+        } 
+        if (response.status === 400) {
+          signAlert('로그인 실패', 'ID 혹은 PW가 틀렸습니다.');
+          console.log("로그인 실패");
         }
-        return response.json();
       })
       .then((data) => {
         console.log(data);
-        saveLoginData(JSON.stringify(data));
+        saveLoginData(data);
       })
       .catch((error) => {
         console.error('Error message:', error.message);
@@ -55,7 +60,9 @@ const LoginScreen = ({ navigation } : TestScreenProps) => {
         
       setIdText('');
       setPwText('');
-      navigation.popToTop();
+      //로그인 시 이전의 네비게이션 스택은 필요없을 뿐더러,
+      //Home 화면 리렌더링을 위해 reset 해줌.
+      navigation.reset({routes:[{name: 'Home'}]});
     }
     const signUp = async() => {
       await fetch('http://localhost:3001/user', {

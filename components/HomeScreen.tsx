@@ -10,6 +10,7 @@ import { RootStackParamList } from '../App';
 import { StatusBar } from 'expo-status-bar';
 import { TestScreenProps } from './TestComponent';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
+import { enableLayoutAnimations } from 'react-native-reanimated';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window')
 
@@ -19,15 +20,15 @@ const STORAGE_KEY_LOGIN = "@LoginData"
 
 const HomeScreen = ({navigation} : HomeScreenProps) => {
   const [loginData, setLoginData] = useState("");
-  const [login, setLogin] = useState("");
-
+  const [login, setLogin] = useState(false);
+  
   const loadLoginData = async () => {
     try {
       const s = await AsyncStorage.getItem(STORAGE_KEY_LOGIN)
       if (s!=null) {
         setLoginData(JSON.parse(s));
-        setLogin("true");
-      }
+        setLogin(true);
+      }enableLayoutAnimations
     } catch (e) {
     }
   };
@@ -35,7 +36,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   const removeLoginData = async () => {
     try {
       setLoginData("");
-      setLogin("false");
+      setLogin(false);
       await AsyncStorage.removeItem(STORAGE_KEY_LOGIN) //Object를 String으로
     } catch (e) {
       // saving error
@@ -65,7 +66,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     page++;
     const targetday = new Date(today.getFullYear(), today.getMonth()+page, today.getDate());
     refCal?.current?.changeDate(targetday);
-    console.log(targetday.getMonth());
   },[]);
 
   const onPressPre = useCallback(()=> {
@@ -74,8 +74,28 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     const targetday = new Date(today.getFullYear(), today.getMonth()+page, today.getDate());
     refCal?.current?.changeDate(targetday);
   },[]);
-
   
+  const rightButton = () => {
+    if (login) {
+      return(
+        <View>
+            <Button onPress={()=>{
+              setLogin(false);
+              removeLoginData();
+            }} title="Logout"/>
+            <Button onPress={()=> onPress()} title="UP"/>
+        </View>);
+    }
+    return(
+      <View>
+        <Button onPress={()=> {
+          navigation.push("Login");
+        }} title="Login"/>
+        <Button onPress={()=> onPress()} title="UP"/>
+      </View>
+    )
+  }
+
   useEffect(() => {
     loadLoginData();
     navigation.setOptions({title: targetYM});
@@ -85,44 +105,19 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         <Button onPress={()=> onPressNext()} title="Next"/>
       </View>
     )});
-    navigation.setOptions({headerRight: () => (
-      <View>
-        {login==="true"?(
-          <Button onPress={()=> {
-            removeLoginData();
-          }} title="Logout"/>
-        ):(
-          <Button onPress={()=> {
-            console.log(loginData);
-            navigation.push("Login");
-          }} title="Login"/>
-        )}
-        <Button onPress={()=> onPress()} title="UP"/>
-      </View>
-    )});
-  }, [navigation]);
+    navigation.setOptions({headerRight: rightButton});
+  }, [navigation, login]);
 
   return (
     <GestureHandlerRootView style={{flex:1}}>
-    <View style={styles.container}>  
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onPressPre}>
-          <Text style={styles.calBtnText}>Test</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onPress}>
-          <Text style={styles.calBtnText}>{targetYM}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onPressNext}>
-          <Text style={styles.calBtnText}>Test2</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>  
+        <StatusBar style="light" />
+        <BottomSheet ref={refBS}>
+          <View style={styles.panel}>
+            <Calendar ref={refCal}/>
+          </View>
+        </BottomSheet>
       </View>
-      <StatusBar style="light" />
-      <BottomSheet ref={refBS}>
-        <View style={styles.panel}>
-          <Calendar ref={refCal}/>
-        </View>
-      </BottomSheet>
-    </View>
     </GestureHandlerRootView>
   );
 }

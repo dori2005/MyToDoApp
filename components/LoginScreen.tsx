@@ -1,9 +1,10 @@
-import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Alert, Button, Platform, StyleSheet, Text, TextInput, View } from 'react-native'
 import React, { useState } from 'react'
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../App';
 import { StackScreenProps } from '@react-navigation/stack';
+import signAlert from './util/Tools';
 
 export type TestScreenProps = StackScreenProps<RootStackParamList, "Login">; 
 
@@ -20,13 +21,6 @@ const LoginScreen = ({ navigation } : TestScreenProps) => {
         // saving error
       }
     };
-
-    const signAlert = (a:string, b:string) => {
-      Alert.alert(a,b, [
-        {text: 'OK', onPress: () => console.log('OK Pressed')},
-      ],
-      {cancelable: false});
-    }
 
     const onClick = async () => {
       await fetch('http://localhost:3001/login-token', {

@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { TestScreenProps } from './TestComponent';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
+import signAlert from './util/Tools';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window')
 
@@ -44,6 +45,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
       })
       .then((response) => {
         if (response.status === 200) {
+          signAlert('로그아웃', '로그아웃 되었습니다.');
           return response.json;
         }
       })
@@ -66,7 +68,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     if (isActive) { //만일 액티브가 활성화 되어있으면
       refBS?.current?.scrollTo(0);   // 스크롤을 0으로 내려 없앤다. 그럼 scrollTo에서 0이 되면서 active를 비활성화 한다.
     }else {  // 비활성화 되어있으면
-      refBS?.current?.scrollTo(-200); // 스크롤을 -200으로 그럼 scrollTo에서 0이 아니여서 active를 활성화 한다.
+      refBS?.current?.scrollTo(-900); // 스크롤을 -200으로 그럼 scrollTo에서 0이 아니여서 active를 활성화 한다.
     }
   }, []);
 
@@ -135,6 +137,11 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
           </View>
         </BottomSheet>
       </View>
+      <View style={styles.add_todo_button}>
+        <TouchableOpacity>
+          
+        </TouchableOpacity>
+      </View>
     </GestureHandlerRootView>
   );
 }
@@ -176,4 +183,12 @@ const styles = StyleSheet.create({
   right_top: {
       flexDirection: "row",
   },
+  add_todo_button: {
+    width: 75,
+    height: 75,
+    position: 'absolute',
+    right: 20,
+    bottom: 50,
+    backgroundColor: 'red',
+  }
 });

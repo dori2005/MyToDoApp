@@ -1,5 +1,5 @@
 import BottomSheet, { BottomSheetRefProps } from './BottomSheet';
-import { Button, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import Calendar, { CalendarRefProps } from './Calendar';
 import { StackScreenProps, createStackNavigator } from '@react-navigation/stack';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -137,9 +137,16 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
           </View>
         </BottomSheet>
       </View>
-      <View style={styles.add_todo_button}>
-        <TouchableOpacity>
-          
+      <View style={styles.add_button_view}>
+        <TouchableOpacity onPress={()=>{}}>
+          <Image style={styles.magic_wand_button}
+            source={require('../assets/magic-wand.png')}/>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.add_todo_button} onPress={()=>{}}>
+          <View>
+            <View style={styles.crossVertical} />
+            <View style={styles.crossHorizon} />
+          </View>
         </TouchableOpacity>
       </View>
     </GestureHandlerRootView>
@@ -183,12 +190,39 @@ const styles = StyleSheet.create({
   right_top: {
       flexDirection: "row",
   },
-  add_todo_button: {
-    width: 75,
-    height: 75,
+  add_button_view: {
+    width: 80,
+    height: 200,
     position: 'absolute',
     right: 20,
     bottom: 50,
-    backgroundColor: 'red',
-  }
+  },
+  magic_wand_button: {
+    width: 80,
+    height: 80,
+    marginBottom: 20,
+  },
+  add_todo_button: {
+    width: 80,
+    height: 80,
+    borderRadius: 80/2,
+    backgroundColor: 'grey',
+    alignItems:"center",
+    justifyContent: "center"
+  },
+  crossVertical: {
+    backgroundColor: "white",
+    height: 48,
+    width: 8,
+    borderRadius: 3,
+  },
+  crossHorizon: {
+    backgroundColor: "white",
+    height: 8,
+    width: 48,
+    borderRadius: 3,
+    position: "absolute",
+    left: -20,
+    top: 20,
+  },
 });

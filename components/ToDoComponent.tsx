@@ -1,5 +1,6 @@
 import {
     Alert,
+    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -14,19 +15,31 @@ import React, { useEffect, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FontAwesome } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { theme } from './color';
+import { theme } from './util/color';
+
+const server = require('./util/saveTodo');
 
 const STORAGE_KEY = "@toDos"
-  const STORAGE_KEY_TAP = "@tabData"
+const STORAGE_KEY_TAP = "@tabData"
+
+type TodoData = {
+  text:string,
+  working:boolean,
+  complete:boolean,
+  edit:boolean,
+};
+type TodoList = {
+  [key:string] : TodoData,
+}
   
-  export default function App() {
+export default function ToDoComponent() {
     const [working, setWorking] = useState(true);
     const [editing, setEditing] = useState("");
     const [text, setText] = useState("");
     const [editText, setEditText] = useState("");
-    const [toDos, setToDos] = useState({})
+    const [toDos, setToDos] = useState<TodoList>();
   
-    const saveTabData = async (saveData) => {
+    const saveTabData = async (saveData:Object) => {
       try {
         await AsyncStorage.setItem(STORAGE_KEY_TAP, JSON.stringify(saveData)) //Object를 String으로
       } catch (e) {
@@ -56,8 +69,7 @@ const STORAGE_KEY = "@toDos"
   
     const inputText = (payload:string) => setText(payload);
   
-  
-    const saveToDos = async (toSave) => {
+    const saveToDos = async (toSave:Object) => {
       try {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave)) //Object를 String으로
       } catch (e) {
@@ -85,42 +97,50 @@ const STORAGE_KEY = "@toDos"
       if (text === "") {
         return
       }
-      //save to do
-      //Object assign
-      /*const newToDos = Object.assign({}, toDos, {
-        [Date.now()]: {text, work:working}
-      });*/
-  
-      //ES6
       const newToDos = {
         ...toDos,
-        [Date.now()]: { text, working, complete: false, edit: false },
+        [Date.now()]: { text, working, complete: false },
       };
+      const data = { text, working, complete: false };
+      const time = Date.now().toString();
+  
   
       setToDos(newToDos);
-      await saveToDos(newToDos);
+      await server.renewUpdate(0, time, data);
       setText("");
     }
   
+    const deleteAction = async(key:string) => {
+        const newToDos = { ...toDos };
+        delete newToDos[key];
+        setToDos(newToDos);
+        server.renewUpdate(2, key);
+      }
+      
     const deleteToDo = (key:string) => {
-      Alert.alert(
-        "Delete To Do",
-        "Are you sure?", [
-        { text: "Cancel" },
-        {
-          text: "I'm Sure",
-          style: "destructive",
-          onPress: async () => {
-            const newToDos = { ...toDos };
-            delete newToDos[key];
-            setToDos(newToDos);
-            await saveToDos(newToDos);
+        if(Platform.OS == "web") {
+          const ok = confirm("Do you want to delete this To Do?")
+          if(ok) {
+            deleteAction(key);
           }
-        },
-      ]);
-    }
-  
+        }else {
+          Alert.alert(
+            "Delete To Do",
+            "Are you sure?", [
+            { text: "Cancel" },
+            {
+              text: "I'm Sure",
+              style: "destructive",
+              onPress: () => deleteAction(key)
+            },
+          ]);
+        }
+      }
+      
     const completeToDo = async (key:string) => {
+      if (toDos === undefined)
+        return null;
+      
       const newToDos = { ...toDos }
       if (newToDos[key].complete)
         newToDos[key].complete = false;
@@ -128,22 +148,95 @@ const STORAGE_KEY = "@toDos"
         newToDos[key].complete = true;
   
       setToDos(newToDos);
-      await saveToDos(newToDos);
+      await server.renewUpdate(1, key, { 
+          text: toDos[key].text, 
+          working: toDos[key].working, 
+          complete: toDos[key].complete
+        });
     }
   
     const editToDo = async (key:string) => {
-      //if (editing != "") setEditing("");
       setEditing(key);
-      setEditText(toDos[key].text);
+      if (toDos !== undefined)
+        setEditText(toDos[key].text);
     }
-    const inputEditText = (payload) => setEditText(payload);
-  
+
+    const inputEditText = (payload:string) => setEditText(payload);
+
     const sumitEditToDo = async (key:string) => {
-      const newToDos = { ...toDos }
-      newToDos[key].text = editText
-      setToDos(newToDos);
-      await saveToDos(newToDos);
+      if (editText && toDos !== undefined) {
+        const newToDos = { ...toDos }
+        newToDos[key].text = editText
+        setToDos(newToDos);
+        await server.renewUpdate(1, key, { 
+            text: editText, 
+            working: toDos[key].working, 
+            complete: toDos[key].complete
+          });
+        //await server.saveEditToDo(key, editText, true);
+      } else {
+        if(Platform.OS == "web") {
+          const ok = confirm("To Do is Empty.")
+        }else {
+          Alert.alert(
+            "To Do is Empty.",
+            "You must fill text", [
+            { text: "Cancel" },
+            {
+              text: "Okay",
+              style: "destructive"
+            },
+          ]);
+        }
+      }
       setEditing("");
+    }
+  
+
+    const printTodo = () => {
+      if(toDos === undefined)
+        return(null);
+      return (Object.keys(toDos).map((key) => (  // Object.keys(toDos)의 output : [key1, key2,...] 자세한건 notion에
+        toDos[key].working === working ? (<View style={styles.toDo} key={key}>
+          <View style={{ flexDirection: "row" }}>
+            <TouchableOpacity onPress={() => completeToDo(key)}>
+              <FontAwesome name="check" size={20} color={toDos[key].complete ? "white" : theme.grey} />
+            </TouchableOpacity>
+            {key === editing ? (
+              <TextInput
+                autoFocus={true}
+                onChangeText={inputEditText}
+                onEndEditing={() => sumitEditToDo(key)}
+                onSubmitEditing={() => sumitEditToDo(key)}
+                value={editText}
+                style={{
+                  ...styles.toDoText,
+                  color: toDos[key].complete ? theme.grey : "white",
+                  textDecorationLine: toDos[key].complete ? 'line-through' : 'none'
+                }} />
+            ) : (
+              <Text style={{
+                ...styles.toDoText,
+                color: toDos[key].complete ? theme.grey : "white",
+                textDecorationLine: toDos[key].complete ? 'line-through' : 'none'
+              }}>
+                {toDos[key].text}
+              </Text>
+            )}
+          </View>
+          <View style={{ flexDirection: "row" }}>
+            <TouchableOpacity
+              style={{ paddingRight: 10 }}
+              onPress={() => editToDo(key)}>
+              <FontAwesome name="edit" size={20} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => deleteToDo(key)}>
+              <FontAwesome name="trash" size={18} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>) : null
+      ))
+      )
     }
   
     return (
@@ -165,46 +258,8 @@ const STORAGE_KEY = "@toDos"
           placeholder={working ? "Add a To Do" : "Where do you want?"}
           style={styles.input}></TextInput>
         <ScrollView>
-          {Object.keys(toDos).map((key) => (  // Object.keys(toDos)의 output : [key1, key2,...] 자세한건 notion에
-            toDos[key].working === working ? (<View style={styles.toDo} key={key}>
-              <View style={{ flexDirection: "row" }}>
-                <TouchableOpacity onPress={() => completeToDo(key)}>
-                  <FontAwesome name="check" size={20} color={toDos[key].complete ? "white" : theme.grey} />
-                </TouchableOpacity>
-                {key === editing ? (
-                  <TextInput
-                    autoFocus={true}
-                    onChangeText={inputEditText}
-                    onEndEditing={() => sumitEditToDo(key)}
-                    onSubmitEditing={() => sumitEditToDo(key)}
-                    value={editText}
-                    style={{
-                      ...styles.toDoText,
-                      color: toDos[key].complete ? theme.grey : "white",
-                      textDecorationLine: toDos[key].complete ? 'line-through' : 'none'
-                    }} />
-                ) : (
-                  <Text style={{
-                    ...styles.toDoText,
-                    color: toDos[key].complete ? theme.grey : "white",
-                    textDecorationLine: toDos[key].complete ? 'line-through' : 'none'
-                  }}>
-                    {toDos[key].text}
-                  </Text>
-                )}
-              </View>
-              <View style={{ flexDirection: "row" }}>
-                <TouchableOpacity
-                  style={{ paddingRight: 10 }}
-                  onPress={() => editToDo(key)}>
-                  <FontAwesome name="edit" size={20} color="white" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => deleteToDo(key)}>
-                  <FontAwesome name="trash" size={18} color="white" />
-                </TouchableOpacity>
-              </View>
-            </View>) : null
-          ))}</ScrollView>
+          {printTodo()}
+        </ScrollView>
       </View>
     );
   }

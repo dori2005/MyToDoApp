@@ -3,6 +3,8 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useCallback, useEffect, useImperativeHandle } from 'react'
 
+import ToDoComponent from './ToDoComponent'
+
 const {height: SCREEN_HEIGHT} = Dimensions.get('window')
 
 //BOTTOM SHEET의 최고 높이 제한. web에서는 오류 자주남
@@ -93,6 +95,7 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
             <Animated.View style={[styles.bottomSheetContainer, rBottomSheetStyle]}>
                 <View style={styles.line}/>
                 {children}
+                <ToDoComponent></ToDoComponent>
             </Animated.View>
         </View>
     </GestureDetector>

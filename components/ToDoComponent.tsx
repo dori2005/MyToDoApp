@@ -26,7 +26,6 @@ type TodoData = {
   text:string,
   working:boolean,
   complete:boolean,
-  edit:boolean,
 };
 type TodoList = {
   [key:string] : TodoData,
@@ -68,22 +67,15 @@ export default function ToDoComponent() {
     };
   
     const inputText = (payload:string) => setText(payload);
-  
-    const saveToDos = async (toSave:Object) => {
-      try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave)) //Object를 String으로
-      } catch (e) {
-        // saving error
-      }
-    };
-  
+
     const loadToDos = async () => {
       try {
-        const s = await AsyncStorage.getItem(STORAGE_KEY)
-        if (s!=null)
-          setToDos(JSON.parse(s));  // string >> javascript object
-      } catch (e) {
-        // error reading value
+        console.log("test ToDOS");
+        const todo:TodoList = await server.getToDos();
+        console.log(todo);
+        setToDos(todo);
+      } catch(e) {
+        console.log(e);
       }
     };
   

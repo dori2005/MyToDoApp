@@ -3,15 +3,52 @@ type TodoData = {
     text:string,
     working:boolean,
     complete:boolean,
-  };
+};
+type LoadData = {
+  time:string,
+  text:string,
+  work:number,
+  complete:number,
+};
+type TodoList = {
+    [key:string] : TodoData,
+}
+type DeleteList = {
+    [key:string] : boolean,
+}
+interface UpdateStack {
+  create : TodoList,
+  update : TodoList,
+  delete : DeleteList
+}
   
-const updateStack = {
-    'create' : {},
-    'update' : {},
-    'delete' : {},
+const updateStack:UpdateStack = {
+    create : {},
+    update : {},
+    delete : {},
   };
+
+  const getToDos = async () => {
+    const todo:TodoList = {};
+    await fetch('http://localhost:3000/', {
+      method: "GET"
+    })
+    .then((response) => {
+      return response.json();
+    })
+    .then((data) => {
+      data.forEach((object:LoadData)=> {
+        todo[object["time"]] = { "text":object["text"], "working":object["work"]==0?false:true, "complete":object["complete"]==0?false:true };
+      })
+    })
+    .catch((error) => {
+      console.error('Error message:', error.message);
+    })
+    return todo;
+  };
+
     // save server db
-  const saveAddToDos = async (sendData:TodoData) => {
+  const saveAddToDos = async (sendData:TodoList) => {
     await fetch('http://localhost:3000/test2', {
       method: "POST",
       headers: {
@@ -34,7 +71,7 @@ const updateStack = {
     })
   };
   
-  const saveDeleteToDos = async (sendData:TodoData) => {
+  const saveDeleteToDos = async (sendData:DeleteList) => {
     await fetch('http://localhost:3000/test2', {
       method: "DELETE",
       headers: {
@@ -57,7 +94,7 @@ const updateStack = {
     })
   };
   
-  const saveEditToDos = async (sendData) => {
+  const saveEditToDos = async (sendData:TodoList) => {
     console.log(sendData);
     await fetch('http://localhost:3000/test2', {
       method: "PATCH",
@@ -131,6 +168,7 @@ const updateStack = {
   }
     
   module.exports = {
-      renewUpdate,
-      saveUpdate
+    getToDos,
+    renewUpdate,
+    saveUpdate
   }

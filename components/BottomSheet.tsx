@@ -4,6 +4,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useCallback, useEffect, useImperativeHandle } from 'react'
 
 import ToDoComponent from './ToDoComponent'
+import Calendar from './Calendar'
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window')
 

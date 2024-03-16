@@ -79,16 +79,10 @@ const Calendar = React.forwardRef<CalendarRefProps>(({}, ref) => {
         })
     }
     getRecentCal();
+    console.log(SCREEN_HEIGHT);
 
   return (
-    <View>
-        <View style={styles.row}>  
-        {heads.map((value, index) => (
-            <View key={index} style={styles.headItem}>
-                <Text style={styles.text}>{value}</Text>
-            </View>           
-        ))}
-        </View>
+    <View style={styles.test}>
         {recentCal.map((array, index) => ( // 가로줄, 행을 생성
             <View key={index} style={styles.row}>  
                 {array.map((value, index2) => (
@@ -107,6 +101,10 @@ const Calendar = React.forwardRef<CalendarRefProps>(({}, ref) => {
 export default Calendar
 
 const styles = StyleSheet.create({
+    test: {
+        height : SCREEN_HEIGHT*9/10,
+        bottom : 0
+    },
     text : {
         color: 'white',
     },
@@ -120,18 +118,8 @@ const styles = StyleSheet.create({
         width: SCREEN_WIDTH/7,
         paddingVertical: 8,
         paddingHorizontal: 4,
-        height: 100,
+        height: SCREEN_HEIGHT*3/20,
         borderWidth: 1,
         borderColor: 'white',
     },
-    headItem: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: SCREEN_WIDTH/7,
-        paddingVertical: 8,
-        paddingHorizontal: 4,
-        height: 20,
-        borderWidth: 1,
-        borderColor: 'white',
-    }
 })

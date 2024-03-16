@@ -132,9 +132,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
       <View style={styles.container}>  
         <StatusBar style="light" />
         <BottomSheet ref={refBS}>
-          <View style={styles.panel}>
-            <Calendar ref={refCal}/>
-          </View>
+          <Calendar ref={refCal}/>
         </BottomSheet>
       </View>
       <View style={styles.add_button_view}>
@@ -179,13 +177,6 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     backgroundColor: "white",
     opacity: 0.6,
-  },
-  panel: {
-      height: SCREEN_HEIGHT,
-      width: '100%',
-      backgroundColor: 'black',
-      position: 'absolute',
-      top: -SCREEN_HEIGHT,
   },
   right_top: {
       flexDirection: "row",

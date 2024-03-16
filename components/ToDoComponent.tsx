@@ -265,7 +265,6 @@ export default function ToDoComponent() {
     header: {
       justifyContent: "space-between",
       flexDirection: "row",
-      marginTop: 100,
     },
     btnText: {
       fontSize: 38,

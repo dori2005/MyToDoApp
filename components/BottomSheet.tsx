@@ -2,14 +2,15 @@ import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue,
 import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useCallback, useEffect, useImperativeHandle } from 'react'
+import {focus, heads} from '../resources/test'
 
-import ToDoComponent from './ToDoComponent'
 import Calendar from './Calendar'
+import ToDoComponent from './ToDoComponent'
 
-const {height: SCREEN_HEIGHT} = Dimensions.get('window')
+const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 
 //BOTTOM SHEET의 최고 높이 제한. web에서는 오류 자주남
-const MAX_TRANSLATE_Y = -SCREEN_HEIGHT+100  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
+const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*3/4  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
 
 type BottomSheetProps = {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
     children?: React.ReactNode
@@ -24,7 +25,7 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
     ({children}, ref) => {  //(하위 컴포넌트, 파라미터)
     const translateY = useSharedValue(0)
     const active = useSharedValue(false);
-    let test = true;
+    let focusLine = 2 ;
 
     const scrollTo = useCallback((destination: number) => { // 그저 callback 함수 생성
         //tried to synchronously call anonymous function from a different thread.
@@ -54,7 +55,6 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
         translateY.value = event.translationY + context.value.y;    //중간부터 터치하더라도 항상 초기값으로 시작하는 것을 방지
         translateY.value = Math.max(translateY.value, MAX_TRANSLATE_Y); // 둘중에 더 큰값 반환 - MAX_TRANSLATE_Y는 마이너스 값이다.
         translateY.value = Math.min(translateY.value, 0);  //둘중에 작은값 반환
-        console.log(event.translationY);
     }).onEnd(() => {
         if (active.value) {
             if (translateY.value > -SCREEN_HEIGHT/1.13) {
@@ -90,14 +90,31 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
         };
     })
 
+    const focusOnDay = useAnimatedStyle(() => {
+        if(focusLine >= 0 && focusLine <= 5) 
+            return {transform: [{translateY: -translateY.value*focus[focusLine]}]};
+        return {};
+    })
+
   return (
     <GestureDetector gesture={gesture}>
         <View style={styles.touchBaseSheet}>
             <Animated.View style={[styles.bottomSheetContainer, rBottomSheetStyle]}>
-                <View style={styles.line}/>
-                {children}
+                <View style={styles.underPanel}>
+                    <Animated.View style={[styles.calendarBody, focusOnDay]}>
+                        {children}
+                    </Animated.View>
+                </View>
                 <ToDoComponent></ToDoComponent>
+                <View style={styles.line}/>
             </Animated.View>
+            <View style={[styles.headerRow]}>  
+            {heads.map((value, index) => (
+                <View key={index} style={styles.headItem}>
+                    <Text style={styles.text}>{value}</Text>
+                </View>           
+            ))}
+            </View>
         </View>
     </GestureDetector>
   )
@@ -111,21 +128,49 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: 'white',
         position: 'absolute',
-        top: SCREEN_HEIGHT,
+        top: SCREEN_HEIGHT-(SCREEN_HEIGHT/15),
         borderRadius: 25,
     },
     line: {
         width: 75,
         height: 4,
-        backgroundColor: 'grey',
+        backgroundColor: 'white',
         alignSelf: 'center',
         marginVertical: 15,
         borderRadius: 2,
+        position: 'absolute',
     },
     touchBaseSheet: {
         height: SCREEN_HEIGHT,
         width: '100%',
         position: 'absolute',
-        top: 50,
+        top: 0,
+    },
+    underPanel: {
+      height: SCREEN_HEIGHT,
+      width: '100%',
+      backgroundColor: 'black',
+      position: 'absolute',
+      top: -SCREEN_HEIGHT+(SCREEN_HEIGHT/15),
+    },
+    calendarBody : {
+        height: SCREEN_HEIGHT,
+        top:SCREEN_HEIGHT/30,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      position:'absolute'
+    },
+    headItem: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: SCREEN_WIDTH/7,
+        height: SCREEN_HEIGHT/30,
+        borderWidth: 1,
+        borderColor: 'white',
+    },
+    text : {
+        color: 'white',
     },
 })

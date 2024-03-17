@@ -70,9 +70,8 @@ export default function ToDoComponent() {
 
     const loadToDos = async () => {
       try {
-        console.log("test ToDOS");
+        console.log("load ToDos");
         const todo:TodoList = await server.getToDos();
-        console.log(todo);
         setToDos(todo);
       } catch(e) {
         console.log(e);

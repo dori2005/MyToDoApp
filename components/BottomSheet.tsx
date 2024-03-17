@@ -13,19 +13,20 @@ const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*3/4  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
 
 type BottomSheetProps = {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
-    children?: React.ReactNode
+    children?: React.ReactNode,
+    focusLine: number,
 }
 
 export type BottomSheetRefProps = {    //TS에서 메소드를 export하기위한 type 선언 같이 보임. 
     scrollTo: (destination: number) => void;
     isActive: () => boolean;
+    setFocus: (line:number) => void;
 }   //이후 useImperativeHandle로 input과 output을 조립하는듯 하다.
 
 const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-    ({children}, ref) => {  //(하위 컴포넌트, 파라미터)
+    ({children, focusLine}, ref) => {  //(하위 컴포넌트, 파라미터)
     const translateY = useSharedValue(0)
     const active = useSharedValue(false);
-    let focusLine = 2 ;
 
     const scrollTo = useCallback((destination: number) => { // 그저 callback 함수 생성
         //tried to synchronously call anonymous function from a different thread.
@@ -40,12 +41,17 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
         return active.value;
     }, []);
 
+    const setFocus = useCallback( ()=> {
+
+    }, []);
+
     // TS로 인한 코드
     // BottomSheetRefProps와 관련있는듯
-    useImperativeHandle(ref, () => ({scrollTo, isActive}), [
+    useImperativeHandle(ref, () => ({scrollTo, isActive, setFocus}), [
         scrollTo,
-        isActive //모든 외부 사용 함수를 넣어줘야 되는듯 함
-    ]);   //외부에 ref를 내부 scrollTo 함수에 넣어주는 과정같은데 알아봐야함.
+        isActive, //모든 외부 사용 함수를 넣어줘야 되는듯 함
+        setFocus
+    ]);   //외부에 ref에 내부 함수를 대입하는 과정같다.
 
     const context = useSharedValue({ y: 0});
     const gesture = Gesture.Pan().onStart(() => { //터치 시작점 입력 | 항상 시작점에서 드래그량 만큼만 움직이던 것을 해결하기 위함

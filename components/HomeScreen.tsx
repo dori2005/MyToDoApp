@@ -22,7 +22,12 @@ const STORAGE_KEY_LOGIN = "@LoginData"
 const HomeScreen = ({navigation} : HomeScreenProps) => {
   const [loginData, setLoginData] = useState({});
   const [login, setLogin] = useState(false);
+  const [focusLine, setFocusLine] = useState(0);
   
+  const onFocusLine = (target:number) => {
+    setFocusLine(target);
+  }
+
   const loadLoginData = async () => {
     try {
       const s = await AsyncStorage.getItem(STORAGE_KEY_LOGIN)
@@ -131,8 +136,8 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     <GestureHandlerRootView style={{flex:1}}>
       <View style={styles.container}>  
         <StatusBar style="light" />
-        <BottomSheet ref={refBS}>
-          <Calendar ref={refCal}/>
+        <BottomSheet focusLine={focusLine} ref={refBS}>
+          <Calendar setFocusLine={onFocusLine} ref={refCal}/>
         </BottomSheet>
       </View>
       <View style={styles.add_button_view}>

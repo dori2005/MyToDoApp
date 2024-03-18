@@ -39,20 +39,17 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
     }
 
     const initFocusBlock = useMemo(() => {
-        console.log("Memo!")
         const today = new Date();   //현재 시간을 받아옴
         const firstDate = new Date(today.getFullYear(), today.getMonth(), 1)
+        const temp = firstDate.getDay()+today.getDate();
         var row:number, col:number;
-        if(firstDate.getDay() === 0) 
-            row = Math.floor(today.getDate()/7)
-        else
-            row = Math.floor(today.getDate()/7)+1;
+        row = Math.floor(temp/7)
         col = today.getDay();
         setFocusBlock({
             row:row,
             col:col
         })
-    },[]);
+    },[targetDate]);
 
     const changeDate = useCallback((target:Date)=>{
         setTargetDate(target);
@@ -77,12 +74,12 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
 
     //해당 달의 달력을 생성
     const getRecentCal = () => { 
-        console.log("func!")
         if (!targetDate){
             console.log("날짜 불러오기 실패")
             return;
         }
         const today = new Date();   //현재 시간을 받아옴
+        const todayDate = today.getDate();
         const thisYear = targetDate.getFullYear();
         const thisMonth = targetDate.getMonth();
         
@@ -93,15 +90,23 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
         let day = -firstDate.getDay(); //sunday = 0, saturday = 6
         let nextMCount = 1;
 
+        console.log(today.getMonth());
+        console.log(targetDate.getMonth());
+
         recentCal.map((array,row)=> {
             array.map((value:DayData,col)=> {
                 value.color = 0;
                 if ( day++ < 0 )
                     value.date = preLastDateD + day;
                 else if( day <= lastDateD ) {
-                    if(day === today.getDate()){
-                        toDayPosition['row'] = row;
-                        toDayPosition['col'] = col;
+                    if(day === todayDate){
+                        if(today.getMonth() == thisMonth && today.getFullYear() == thisYear){
+                            toDayPosition['row'] = row;
+                            toDayPosition['col'] = col;
+                        }else {
+                            toDayPosition['row'] = -1;
+                            toDayPosition['col'] = -1;
+                        }
                     }
                     value.date = day;
                     value.thisM = true;
@@ -128,28 +133,28 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
             return {}
     }
 
-  return (
-    <View style={styles.test}>
-        {recentCal.map((array, index) => ( // 가로줄, 행을 생성
-            <View key={index} style={styles.row}>  
-                {array.map((value, index2) => (
-                    <TouchableOpacity key={index2} onPress={()=>{
-                        console.log("Focus" + index);
-                        setFocusBlock({
-                            row:index,
-                            col:index2
-                        })
-                        setFocusLine(index);
-                        }} style={[styles.rowItem, styleTest(index, index2)]}>
-                        <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
-                            {value.date}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        ))}
-    </View>
-  )
+    return (
+        <View style={styles.test}>
+            {recentCal.map((array, index) => ( // 가로줄, 행을 생성
+                <View key={index} style={styles.row}>  
+                    {array.map((value, index2) => (
+                        <TouchableOpacity key={index2} onPress={()=>{
+                            console.log("Focus" + index);
+                            setFocusBlock({
+                                row:index,
+                                col:index2
+                            })
+                            setFocusLine(index);
+                            }} style={[styles.rowItem, styleTest(index, index2)]}>
+                            <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
+                                {value.date}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            ))}
+        </View>
+    )
 })
 
 export default Calendar

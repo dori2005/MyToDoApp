@@ -18,6 +18,7 @@ const {height: SCREEN_HEIGHT} = Dimensions.get('window')
 export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
 const STORAGE_KEY_LOGIN = "@LoginData"
+const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*3/4 
 
 const HomeScreen = ({navigation} : HomeScreenProps) => {
   const [loginData, setLoginData] = useState({});
@@ -73,7 +74,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     if (isActive) { //만일 액티브가 활성화 되어있으면
       refBS?.current?.scrollTo(0);   // 스크롤을 0으로 내려 없앤다. 그럼 scrollTo에서 0이 되면서 active를 비활성화 한다.
     }else {  // 비활성화 되어있으면
-      refBS?.current?.scrollTo(-900); // 스크롤을 -200으로 그럼 scrollTo에서 0이 아니여서 active를 활성화 한다.
+      refBS?.current?.scrollTo(MAX_TRANSLATE_Y); // 스크롤을 -200으로 그럼 scrollTo에서 0이 아니여서 active를 활성화 한다.
     }
   }, []);
 

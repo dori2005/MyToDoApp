@@ -18,9 +18,9 @@ type BottomSheetProps = {   // 하위 컴포넌트가 삽입되었을때, 연동
 }
 
 export type BottomSheetRefProps = {    //TS에서 메소드를 export하기위한 type 선언 같이 보임. 
-    scrollTo: (destination: number) => void;
-    isActive: () => boolean;
-    setFocus: (line:number) => void;
+    scrollTo: (destination: number) => void,
+    isActive: () => boolean,
+    setFocus: (line:number) => void,
 }   //이후 useImperativeHandle로 input과 output을 조립하는듯 하다.
 
 const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
@@ -30,8 +30,14 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
 
     const scrollTo = useCallback((destination: number) => { // 그저 callback 함수 생성
         //tried to synchronously call anonymous function from a different thread.
-        //'worklet';  // 위 에러 방지, 과거엔 쓰였는데, 지금은 필요없어진듯
-
+        // 위 에러 방지, 과거엔 쓰였는데, 지금은 필요없어진듯
+        //아니. 지금도 필요하다. IOS에선 필요한것을 확인. 없을경우 어떠한 동작도 없이 팅긴다.
+        //gesture를 통한 호출시에 팅김현상 발생
+        //worklet은 Reanimated에 필수적인듯 함.
+        //동기적으로 호출이 가능하게 된다고 한다.
+        'worklet';  
+        console.log("test");
+        
         active.value = destination !== 0;
 
         translateY.value = withSpring(destination, { damping: 50 }); //자매품 withTiming
@@ -63,17 +69,15 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
         translateY.value = Math.min(translateY.value, 0);  //둘중에 작은값 반환
     }).onEnd(() => {
         if (active.value) {
-            if (translateY.value > -SCREEN_HEIGHT/1.13) {
+            if (translateY.value > -SCREEN_HEIGHT/1.13) 
                 scrollTo(0);
-            } else if (translateY.value < -SCREEN_HEIGHT /1.13) {
+            else 
                 scrollTo(MAX_TRANSLATE_Y);
-            }
         } else {
-            if (translateY.value > -25) {
+            if (translateY.value > -25) 
                 scrollTo(0);
-            } else if (translateY.value < -25) {
+            else
                 scrollTo(MAX_TRANSLATE_Y);
-            }
         }
     })
 
@@ -102,28 +106,28 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
         return {};
     })
 
-  return (
-    <GestureDetector gesture={gesture}>
-        <View style={styles.touchBaseSheet}>
-            <Animated.View style={[styles.bottomSheetContainer, rBottomSheetStyle]}>
-                <View style={styles.underPanel}>
-                    <Animated.View style={[styles.calendarBody, focusOnDay]}>
-                        {children}
-                    </Animated.View>
+    return (
+        <GestureDetector gesture={gesture}>
+            <View style={styles.touchBaseSheet}>
+                <Animated.View style={[styles.bottomSheetContainer, rBottomSheetStyle]}>
+                    <View style={styles.underPanel}>
+                        <Animated.View style={[styles.calendarBody, focusOnDay]}>
+                            {children}
+                        </Animated.View>
+                    </View>
+                    <ToDoComponent></ToDoComponent>
+                    <View style={styles.line}/>
+                </Animated.View>
+                <View style={[styles.headerRow]}>  
+                {heads.map((value, index) => (
+                    <View key={index} style={styles.headItem}>
+                        <Text style={styles.text}>{value}</Text>
+                    </View>           
+                ))}
                 </View>
-                <ToDoComponent></ToDoComponent>
-                <View style={styles.line}/>
-            </Animated.View>
-            <View style={[styles.headerRow]}>  
-            {heads.map((value, index) => (
-                <View key={index} style={styles.headItem}>
-                    <Text style={styles.text}>{value}</Text>
-                </View>           
-            ))}
             </View>
-        </View>
-    </GestureDetector>
-  )
+        </GestureDetector>
+    )
 })
 
 export default BottomSheet

@@ -1,13 +1,14 @@
 
 type TodoData = {
-    text:string,
-    working:boolean,
+    todo_text:string,
     complete:boolean,
 };
 type LoadData = {
+  id:number,
+  user_id:string,
   time:string,
-  text:string,
-  work:number,
+  group_id:string,
+  todo_text:string,
   complete:number,
 };
 type TodoList = {
@@ -28,9 +29,16 @@ const updateStack:UpdateStack = {
     delete : {},
   };
 
-  const getToDos = async () => {
+  const getToDos = async (token:string) => {
     const todo:TodoList = {};
-    await fetch('http://localhost:3000/', {
+    const params = {
+      Token : token
+    };
+    const queryString = new URLSearchParams(params).toString();
+
+    console.log(queryString);
+
+    await fetch(`http://localhost:3000?${queryString}`, {
       method: "GET"
     })
     .then((response) => {
@@ -38,7 +46,7 @@ const updateStack:UpdateStack = {
     })
     .then((data) => {
       data.forEach((object:LoadData)=> {
-        todo[object["time"]] = { "text":object["text"], "working":object["work"]==0?false:true, "complete":object["complete"]==0?false:true };
+        todo[object["time"]] = { "todo_text":object["todo_text"], "complete":object["complete"]==0?false:true };
       })
     })
     .catch((error) => {

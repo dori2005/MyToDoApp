@@ -1,14 +1,15 @@
 import BottomSheet, { BottomSheetRefProps } from './BottomSheet';
 import { Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import Calendar, { CalendarRefProps } from './Calendar';
+import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StackScreenProps, createStackNavigator } from '@react-navigation/stack';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootStackParamList } from '../App';
 import { StatusBar } from 'expo-status-bar';
 import { TestScreenProps } from './TestComponent';
+import { ToDoComponentRefProps } from './ToDoComponent';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
 import signAlert from './util/Tools';
@@ -20,8 +21,12 @@ export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 const STORAGE_KEY_LOGIN = "@LoginData"
 const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*3/4 
 
+type LOGIN_DATA = {
+  token : string,
+}
+
 const HomeScreen = ({navigation} : HomeScreenProps) => {
-  const [loginData, setLoginData] = useState({});
+  const [loginData, setLoginData] = useState<LOGIN_DATA>();
   const [login, setLogin] = useState(false);
   const [focusLine, setFocusLine] = useState(0);
   
@@ -35,6 +40,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
       if (s!=null) {
         setLoginData(JSON.parse(s));
         setLogin(true);
+        loadToDoList();
       }enableLayoutAnimations
     } catch (e) {
     }
@@ -67,6 +73,13 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
       // saving error
     }
   };
+
+  const refToDo = useRef<ToDoComponentRefProps>(null);
+  const loadToDoList = useCallback(()=>{
+    console.log(loginData);
+    if (loginData !== undefined)
+      refToDo?.current?.loadToDos(loginData['token']);
+  },[loginData])
 
   const refBS = useRef<BottomSheetRefProps>(null);
   const onPress = useCallback(() => {   //버튼을 누르면
@@ -133,12 +146,22 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     navigation.setOptions({headerRight: rightButton});
   }, [navigation, login]);
 
+  
+  const data = useMemo(()=>[1,2,3,4,5],[]);
+
   return (
     <GestureHandlerRootView style={{flex:1}}>
       <View style={styles.container}>  
         <StatusBar style="light" />
         <BottomSheet focusLine={focusLine} ref={refBS}>
-          <Calendar setFocusLine={onFocusLine} ref={refCal}/>
+          <FlatList
+            data={data}
+            renderItem={(({item})=> (
+              <Calendar setFocusLine={onFocusLine} targetDay={item} ref={refCal}/>
+            ))}
+            horizontal
+            pagingEnabled
+            />
         </BottomSheet>
       </View>
       <View style={styles.add_button_view}>

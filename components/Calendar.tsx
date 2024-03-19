@@ -18,14 +18,15 @@ const dayPalette = ['gray', 'white', 'red', 'blue'];
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 type CalendarProps = {
-    setFocusLine: (target:number) => void;
+    setFocusLine: (target:number) => void,
+    targetDay: number,
 }
 
 export type CalendarRefProps = {
     changeDate: (target:Date) => void;
 }
 
-const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLine}, ref) => {
+const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLine, targetDay}, ref) => {
     // const [parentHeight, setParentHeight] = useState(0);
     // const onLayout = (event:LayoutChangeEvent) => {
     //   const {height} = event.nativeEvent.layout;
@@ -89,9 +90,6 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
 
         let day = -firstDate.getDay(); //sunday = 0, saturday = 6
         let nextMCount = 1;
-
-        console.log(today.getMonth());
-        console.log(targetDate.getMonth());
 
         recentCal.map((array,row)=> {
             array.map((value:DayData,col)=> {

@@ -10,7 +10,7 @@ import {
     TouchableWithoutFeedback,
     View
 } from 'react-native';
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useImperativeHandle, useState } from "react";
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FontAwesome } from '@expo/vector-icons';
@@ -30,59 +30,34 @@ type TodoData = {
 type TodoList = {
   [key:string] : TodoData,
 }
+
+export type ToDoComponentRefProps = {
+  loadToDos: (token:string) => void;
+}
+
   
-export default function ToDoComponent() {
+const ToDoComponent =React.forwardRef<ToDoComponentRefProps>(({},ref) => {
     const [working, setWorking] = useState(true);
     const [editing, setEditing] = useState("");
     const [text, setText] = useState("");
     const [editText, setEditText] = useState("");
     const [toDos, setToDos] = useState<TodoList>();
   
-    const saveTabData = async (saveData:Object) => {
-      try {
-        await AsyncStorage.setItem(STORAGE_KEY_TAP, JSON.stringify(saveData)) //Object를 String으로
-      } catch (e) {
-        // saving error
-      }
-    };
-  
-    const loadTabData = async () => {
-      try {
-        const s = await AsyncStorage.getItem(STORAGE_KEY_TAP)
-        if (s!=null)
-          setWorking(JSON.parse(s));  // string >> javascript object
-      } catch (e) {
-        // error reading value
-      }
-    };
-  
-    const travel = () => {
-      setWorking(false)
-      saveTabData(false)
-    };
-  
-    const work = () => {
-      setWorking(true)
-      saveTabData(true)
-    };
-  
     const inputText = (payload:string) => setText(payload);
 
-    const loadToDos = async () => {
+    const loadToDos = async (token:string) => {
       try {
         console.log("load ToDos");
-        const todo:TodoList = await server.getToDos();
+        const todo:TodoList = await server.getToDos(token);
         setToDos(todo);
       } catch(e) {
         console.log(e);
       }
     };
-  
-    useEffect(() => {
-      loadToDos();
-      loadTabData();
-    }, []);
-  
+
+    useImperativeHandle(ref, () => ({loadToDos}), [
+      loadToDos,
+    ]); 
   
     const addToDo = async () => {
       if (text === "") {
@@ -90,9 +65,9 @@ export default function ToDoComponent() {
       }
       const newToDos = {
         ...toDos,
-        [Date.now()]: { text, working, complete: false },
+        [Date.now()]: { text, complete: false },
       };
-      const data = { text, working, complete: false };
+      const data = { text, complete: false };
       const time = Date.now().toString();
   
   
@@ -141,7 +116,6 @@ export default function ToDoComponent() {
       setToDos(newToDos);
       await server.renewUpdate(1, key, { 
           text: toDos[key].text, 
-          working: toDos[key].working, 
           complete: toDos[key].complete
         });
     }
@@ -161,7 +135,6 @@ export default function ToDoComponent() {
         setToDos(newToDos);
         await server.renewUpdate(1, key, { 
             text: editText, 
-            working: toDos[key].working, 
             complete: toDos[key].complete
           });
         //await server.saveEditToDo(key, editText, true);
@@ -188,7 +161,7 @@ export default function ToDoComponent() {
       if(toDos === undefined)
         return(null);
       return (Object.keys(toDos).map((key) => (  // Object.keys(toDos)의 output : [key1, key2,...] 자세한건 notion에
-        toDos[key].working === working ? (<View style={styles.toDo} key={key}>
+        <View style={styles.toDo} key={key}>
           <View style={{ flexDirection: "row" }}>
             <TouchableOpacity onPress={() => completeToDo(key)}>
               <FontAwesome name="check" size={20} color={toDos[key].complete ? "white" : theme.grey} />
@@ -225,7 +198,7 @@ export default function ToDoComponent() {
               <FontAwesome name="trash" size={18} color="white" />
             </TouchableOpacity>
           </View>
-        </View>) : null
+        </View>
       ))
       )
     }
@@ -234,12 +207,6 @@ export default function ToDoComponent() {
       <View style={styles.container}>
         <StatusBar style="auto" />
         <View style={styles.header}>
-          <TouchableOpacity onPress={work}>
-            <Text style={{ ...styles.btnText, color: working ? "white" : theme.grey }}>Work</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={travel}>
-            <Text style={{ ...styles.btnText, color: !working ? "white" : theme.grey }}>Travel</Text>
-          </TouchableOpacity>
         </View>
         <TextInput
           onSubmitEditing={addToDo}
@@ -254,7 +221,10 @@ export default function ToDoComponent() {
       </View>
     );
   }
+)
   
+export default ToDoComponent
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,

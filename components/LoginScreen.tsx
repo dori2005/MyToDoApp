@@ -14,9 +14,10 @@ const LoginScreen = ({ navigation } : TestScreenProps) => {
     const [idText, setIdText] = useState('');
     const [pwText, setPwText] = useState('');
     
-    const saveLoginData = async (saveData : string) => { // 저장
+    const saveLoginToken = async (token : string) => { // 저장
       try {
-        await AsyncStorage.setItem(STORAGE_KEY_LOGIN, JSON.stringify(saveData)) //Json으로 저장
+        const data = {'token' : token};
+        await AsyncStorage.setItem(STORAGE_KEY_LOGIN, JSON.stringify(data)) //Json으로 저장
       } catch (e) {
         // saving error
       }
@@ -45,8 +46,10 @@ const LoginScreen = ({ navigation } : TestScreenProps) => {
         }
       })
       .then((data) => {
-        console.log(data);
-        saveLoginData(data);
+        if(data !== undefined){
+          console.log(data);
+          saveLoginToken(data);
+        }
       })
       .catch((error) => {
         console.error('Error message:', error.message);

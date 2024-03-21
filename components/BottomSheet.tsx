@@ -1,11 +1,11 @@
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
 import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import React, { useCallback, useEffect, useImperativeHandle } from 'react'
+import React, { useCallback, useEffect, useImperativeHandle, useRef } from 'react'
+import ToDoComponent, { ToDoComponentRefProps } from './ToDoComponent'
 import {focus, heads} from '../resources/test'
 
 import Calendar from './Calendar'
-import ToDoComponent from './ToDoComponent'
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 
@@ -20,14 +20,14 @@ type BottomSheetProps = {   // 하위 컴포넌트가 삽입되었을때, 연동
 export type BottomSheetRefProps = {    //TS에서 메소드를 export하기위한 type 선언 같이 보임. 
     scrollTo: (destination: number) => void,
     isActive: () => boolean,
-    setFocus: (line:number) => void,
+    loadToDoList: (token:string) => void,
 }   //이후 useImperativeHandle로 input과 output을 조립하는듯 하다.
 
 const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
     ({children, focusLine}, ref) => {  //(하위 컴포넌트, 파라미터)
     const translateY = useSharedValue(0)
     const active = useSharedValue(false);
-
+    
     const scrollTo = useCallback((destination: number) => { // 그저 callback 함수 생성
         //tried to synchronously call anonymous function from a different thread.
         // 위 에러 방지, 과거엔 쓰였는데, 지금은 필요없어진듯
@@ -47,16 +47,15 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
         return active.value;
     }, []);
 
-    const setFocus = useCallback( ()=> {
-
-    }, []);
+    const refToDo = useRef<ToDoComponentRefProps>(null);
+    const loadToDoList = (token:string)=>refToDo?.current?.loadToDos(token);
 
     // TS로 인한 코드
     // BottomSheetRefProps와 관련있는듯
-    useImperativeHandle(ref, () => ({scrollTo, isActive, setFocus}), [
+    useImperativeHandle(ref, () => ({scrollTo, isActive, loadToDoList}), [
         scrollTo,
         isActive, //모든 외부 사용 함수를 넣어줘야 되는듯 함
-        setFocus
+        loadToDoList
     ]);   //외부에 ref에 내부 함수를 대입하는 과정같다.
 
     const context = useSharedValue({ y: 0});
@@ -115,7 +114,7 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
                             {children}
                         </Animated.View>
                     </View>
-                    <ToDoComponent></ToDoComponent>
+                    <ToDoComponent ref={refToDo}/>
                     <View style={styles.line}/>
                 </Animated.View>
                 <View style={[styles.headerRow]}>  

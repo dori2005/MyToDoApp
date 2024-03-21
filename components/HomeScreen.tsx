@@ -3,13 +3,13 @@ import { Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native'
 import Calendar, { CalendarRefProps } from './Calendar';
 import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StackScreenProps, createStackNavigator } from '@react-navigation/stack';
+import ToDoComponent, { ToDoComponentRefProps } from './ToDoComponent';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../App';
 import { StatusBar } from 'expo-status-bar';
 import { TestScreenProps } from './TestComponent';
-import { ToDoComponentRefProps } from './ToDoComponent';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
 import signAlert from './util/Tools';
@@ -74,12 +74,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     }
   };
 
-  const refToDo = useRef<ToDoComponentRefProps>(null);
-  const loadToDoList = useCallback(()=>{
-    console.log(loginData);
-    if (loginData !== undefined)
-      refToDo?.current?.loadToDos(loginData['token']);
-  },[loginData])
 
   const refBS = useRef<BottomSheetRefProps>(null);
   const onPress = useCallback(() => {   //버튼을 누르면
@@ -90,6 +84,13 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
       refBS?.current?.scrollTo(MAX_TRANSLATE_Y); // 스크롤을 -200으로 그럼 scrollTo에서 0이 아니여서 active를 활성화 한다.
     }
   }, []);
+
+  const loadToDoList = useCallback(()=>{
+    console.log("called loadTodoList");
+    console.log(loginData);
+    if (loginData !== undefined) 
+      refBS?.current?.loadToDoList(loginData['token']);
+  },[loginData])
 
   const refCal = useRef<CalendarRefProps>(null);
   let page = 0;

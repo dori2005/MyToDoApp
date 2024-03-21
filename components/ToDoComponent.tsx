@@ -46,8 +46,8 @@ const ToDoComponent =React.forwardRef<ToDoComponentRefProps>(({},ref) => {
     const inputText = (payload:string) => setText(payload);
 
     const loadToDos = async (token:string) => {
+      console.log("load ToDos");
       try {
-        console.log("load ToDos");
         const todo:TodoList = await server.getToDos(token);
         setToDos(todo);
       } catch(e) {

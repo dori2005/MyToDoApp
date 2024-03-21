@@ -32,7 +32,7 @@ const updateStack:UpdateStack = {
   const getToDos = async (token:string) => {
     const todo:TodoList = {};
     const params = {
-      Token : token
+      token : token
     };
     const queryString = new URLSearchParams(params).toString();
 

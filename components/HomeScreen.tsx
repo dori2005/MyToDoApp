@@ -9,12 +9,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../App';
 import { StatusBar } from 'expo-status-bar';
-import { TestScreenProps } from './TestComponent';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
 import signAlert from './util/Tools';
+import { theme } from './util/color';
 
-const {height: SCREEN_HEIGHT} = Dimensions.get('window')
+const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
 
 export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
@@ -103,21 +103,25 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
 
   const onPressNext = useCallback(()=> {
     page++;
-    const targetday = new Date(today.getFullYear(), today.getMonth()+page, today.getDate());
+    const targetday = new Date(today.getFullYear(), today.getMonth()+page, 1);
+    setTargetYM(toStringYM(targetday));
     refCal?.current?.changeDate(targetday);
   },[]);
 
   const onPressPre = useCallback(()=> {
     page--;
-    const today = new Date();
-    const targetday = new Date(today.getFullYear(), today.getMonth()+page, today.getDate());
+    const targetday = new Date(today.getFullYear(), today.getMonth()+page+1, 0);
+    setTargetYM(toStringYM(targetday));
     refCal?.current?.changeDate(targetday);
   },[]);
   
   const rightButton = () => {
     if (login) {
       return(
-        <View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity onPress={()=> onPressNext()}>
+            <Text style={styles.headerButton}>▶</Text>
+          </TouchableOpacity>
             <Button onPress={()=>{
               setLogin(false);
               removeLoginData();
@@ -126,7 +130,10 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         </View>);
     }
     return(
-      <View>
+      <View style={styles.headerRight}>
+        <TouchableOpacity onPress={()=> onPressNext()}>
+          <Text style={styles.headerButton}>▶</Text>
+        </TouchableOpacity>
         <Button onPress={()=> {
           navigation.push("Login");
         }} title="Login"/>
@@ -138,23 +145,32 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   useEffect(() => {
     loadLoginData();
     navigation.setOptions({title: targetYM});
+    navigation.setOptions({
+      // Header 블록에 대한 스타일
+      headerStyle: { 
+        backgroundColor: theme.background,
+      },
+      // Header의 텍스트, 버튼 색상
+      headerTintColor: '#ffffff',
+      // 타이틀 텍스트의 스타일
+      headerTitleStyle: {
+        fontWeight: 'bold',
+        fontSize: 20,
+      },
+    })
     navigation.setOptions({headerLeft: () => (
-      <View>
-        <Button onPress={()=> onPressPre()} title="Pre"/>
-        <Button onPress={()=> onPressNext()} title="Next"/>
+      <View style={styles.headerLeft}>
+        <TouchableOpacity onPress={()=> onPressPre()}>
+          <Text style={{...styles.headerButton, textAlign:'right'}}>◀</Text>
+        </TouchableOpacity>
       </View>
     )});
     navigation.setOptions({headerRight: rightButton});
-  }, [navigation, login]);
+  }, [navigation, login, targetYM]);
 
   
   const data = useMemo(()=>[1,2,3,4,5],[]);
-
-  return (
-    <GestureHandlerRootView style={{flex:1}}>
-      <View style={styles.container}>  
-        <StatusBar style="light" />
-        <BottomSheet focusLine={focusLine} ref={refBS}>
+  /* 캘린더 슬라이드
           <FlatList
             data={data}
             renderItem={(({item})=> (
@@ -163,13 +179,23 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
             horizontal
             pagingEnabled
             />
-        </BottomSheet>
-      </View>
-      <View style={styles.add_button_view}>
+  */
+ /* 마법봉
         <TouchableOpacity onPress={()=>{}}>
           <Image style={styles.magic_wand_button}
             source={require('../assets/magic-wand.png')}/>
         </TouchableOpacity>
+   */
+
+  return (
+    <GestureHandlerRootView style={{flex:1}}>
+      <View style={styles.container}>  
+        <StatusBar style="light" />
+        <BottomSheet focusLine={focusLine} ref={refBS}>
+          <Calendar setFocusLine={onFocusLine} targetDay={0} ref={refCal}/>
+        </BottomSheet>
+      </View>
+      <View style={styles.add_button_view}>
         <TouchableOpacity style={styles.add_todo_button} onPress={()=>{}}>
           <View>
             <View style={styles.crossVertical} />
@@ -212,38 +238,53 @@ const styles = StyleSheet.create({
       flexDirection: "row",
   },
   add_button_view: {
-    width: 80,
-    height: 200,
+    width: 60,
+    height: 60,
     position: 'absolute',
+    flexDirection: "column-reverse",
     right: 20,
-    bottom: 50,
+    bottom: 20,
   },
   magic_wand_button: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     marginBottom: 20,
   },
   add_todo_button: {
-    width: 80,
-    height: 80,
-    borderRadius: 80/2,
+    width: 60,
+    height: 60,
+    borderRadius: 60/2,
     backgroundColor: 'grey',
     alignItems:"center",
     justifyContent: "center"
   },
   crossVertical: {
     backgroundColor: "white",
-    height: 48,
-    width: 8,
-    borderRadius: 3,
+    height: 36,
+    width: 6,
+    borderRadius: 2,
   },
   crossHorizon: {
     backgroundColor: "white",
-    height: 8,
-    width: 48,
-    borderRadius: 3,
+    height: 6,
+    width: 36,
+    borderRadius: 2,
     position: "absolute",
-    left: -20,
-    top: 20,
+    left: -15,
+    top: 15,
   },
+  headerLeft: {
+    width:SCREEN_WIDTH*3/8,
+    flexDirection:"row-reverse",
+  },
+  headerRight: {
+    width:SCREEN_WIDTH*3/8,
+    flexDirection:"row",
+    alignItems:'center'
+  },
+  headerButton: {
+    width:SCREEN_WIDTH/5,
+    fontSize: 30,
+    color:"white",
+  }
 });

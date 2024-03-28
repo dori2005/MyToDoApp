@@ -1,6 +1,9 @@
 export const heads = ['일', '월', '화', '수', '목', '금', '토'];
 
 export const focus = [1, 0.8, 0.6, 0.4, 0.2, 0]
+export const focus2 = [1, 0.824, 0.648, 0.472, 0.296, 0.12]
+
+export const property = 0.8;
 
 export const bodyDatas = [
     ['1', '2', '3', '4', '5', '6', '7'],

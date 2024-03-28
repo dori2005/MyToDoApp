@@ -4,7 +4,6 @@ import HomeScreen from './components/HomeScreen';
 import LoginScreen from './components/LoginScreen';
 import { NavigationContainer } from '@react-navigation/native'
 import React from 'react'
-import TestComponent from './components/TestComponent';
 import { createStackNavigator } from '@react-navigation/stack'
 
 export type RootStackParamList = {
@@ -42,10 +41,6 @@ export default function App() {
         <Stack.Screen 
           name='Login' 
           component={LoginScreen}
-        />
-        <Stack.Screen 
-          name='Test' 
-          component={TestComponent}
         />
       </Stack.Navigator>
     </NavigationContainer>

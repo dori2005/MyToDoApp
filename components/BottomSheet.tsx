@@ -3,14 +3,18 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useCallback, useEffect, useImperativeHandle, useRef } from 'react'
 import ToDoComponent, { ToDoComponentRefProps } from './ToDoComponent'
-import {focus, heads} from '../resources/test'
+import {focus, focus2, heads, property} from '../resources/test'
 
 import Calendar from './Calendar'
+import { theme } from './util/color'
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 
 //BOTTOM SHEET의 최고 높이 제한. web에서는 오류 자주남
-const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*3/4  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
+//상단 여백 1/10, 하단여백 9/100, 캘린더 칸당 81/100 * 1/6 = 27/200
+//상단 여백 + 캘린더 한칸 = 27/200 + 1/10 = 47/200
+//MAX_TRANSLATE_Y = -(1 - 47/200) = -153/200
+const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*153/200  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
 
 type BottomSheetProps = {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
     children?: React.ReactNode,
@@ -101,7 +105,7 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
 
     const focusOnDay = useAnimatedStyle(() => {
         if(focusLine >= 0 && focusLine <= 5) 
-            return {transform: [{translateY: -translateY.value*focus[focusLine]}]};
+            return {transform: [{translateY: -translateY.value*(focus2[focusLine])}]};
         return {};
     })
 
@@ -176,8 +180,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: SCREEN_WIDTH/7,
         height: SCREEN_HEIGHT/30,
-        borderWidth: 1,
+        borderTopWidth: 1,
         borderColor: 'white',
+        backgroundColor : theme.background,
     },
     text : {
         color: 'white',

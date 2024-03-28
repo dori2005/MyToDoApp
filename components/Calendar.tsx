@@ -1,9 +1,10 @@
 import { Dimensions, LayoutChangeEvent, NativeUIEvent, StyleSheet, Text, View } from 'react-native'
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react'
-import {bodyDatas, heads} from '../resources/test'
+import {bodyDatas, heads, property} from '../resources/test'
 
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated'
+import { theme } from './util/color';
 
 type DayData = {
     date:number,
@@ -34,25 +35,34 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
     // };
     const [targetDate, setTargetDate] = useState<Date>(new Date());
     const [focusBlock, setFocusBlock] = useState<Position>();
-    const toDayPosition:Position = {
+    const toDayBlock:Position = {
         col:0,
         row:0
     }
 
     const initFocusBlock = useMemo(() => {
-        const today = new Date();   //현재 시간을 받아옴
-        const firstDate = new Date(today.getFullYear(), today.getMonth(), 1)
-        const temp = firstDate.getDay()+today.getDate();
+        console.log("Memo" + targetDate);
+        // 첫날 계산.
+        const firstDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1)
+        const temp = firstDate.getDay()+targetDate.getDate()-1; //getDate는 시작이 1이기에 1을 빼줌.
+        console.log("temp" + temp);
         var row:number, col:number;
         row = Math.floor(temp/7)
-        col = today.getDay();
+        col = targetDate.getDay();
         setFocusBlock({
             row:row,
             col:col
         })
     },[targetDate]);
 
+    useEffect(()=>{
+        console.log("page : "+targetDay + ", focus : " + focusBlock?.row);
+        if(focusBlock!==undefined) 
+            setFocusLine(focusBlock.row);
+    },[targetDate]);
+
     const changeDate = useCallback((target:Date)=>{
+        console.log(target);
         setTargetDate(target);
     },[]);
 
@@ -63,18 +73,16 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
 
     const recentCal:DayData[][] = 
         new Array(6).fill([]).map(() => 
-            new Array(7).fill({}).map(() => { 
-                const dd:DayData = {
+            new Array(7).fill({}).map(() => ({
                     'date' : 0,
                     'thisM' : false,
                     'color' : 0,
-                }
-                return dd;
-            })
+                }))
         );
 
     //해당 달의 달력을 생성
     const getRecentCal = () => { 
+        console.log("getRecentCal" + targetDay);
         if (!targetDate){
             console.log("날짜 불러오기 실패")
             return;
@@ -99,11 +107,11 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
                 else if( day <= lastDateD ) {
                     if(day === todayDate){
                         if(today.getMonth() == thisMonth && today.getFullYear() == thisYear){
-                            toDayPosition['row'] = row;
-                            toDayPosition['col'] = col;
+                            toDayBlock['row'] = row;
+                            toDayBlock['col'] = col;
                         }else {
-                            toDayPosition['row'] = -1;
-                            toDayPosition['col'] = -1;
+                            toDayBlock['row'] = -1;
+                            toDayBlock['col'] = -1;
                         }
                     }
                     value.date = day;
@@ -125,7 +133,7 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
     const styleTest = (test:number, test2:number) => {
         if(test==focusBlock?.row && test2==focusBlock?.col)
             return {borderColor: 'red'} 
-        else if(test==toDayPosition['row'] && test2 == toDayPosition['col'])
+        else if(test==toDayBlock['row'] && test2 == toDayBlock['col'])
             return {borderColor: 'blue'}
         else 
             return {}
@@ -159,8 +167,9 @@ export default Calendar
 
 const styles = StyleSheet.create({
     test: {
-        height : SCREEN_HEIGHT*9/10,
-        bottom : 0
+        height : SCREEN_HEIGHT*9/10, 
+        bottom : 0,
+        backgroundColor: theme.background
     },
     text : {
         color: 'white',
@@ -175,8 +184,9 @@ const styles = StyleSheet.create({
         width: SCREEN_WIDTH/7,
         paddingVertical: 8,
         paddingHorizontal: 4,
-        height: SCREEN_HEIGHT*3/20,
-        borderWidth: 1,
-        borderColor: 'white',
+        height: SCREEN_HEIGHT * 27/200, // 상단 여백 1/10, 하단여백 9/100, 여백 제외 81/100 * 1/6 = 27/200
+        borderTopWidth: 1,
+        borderColor:'white',
+        backgroundColor : theme.background,
     },
 })

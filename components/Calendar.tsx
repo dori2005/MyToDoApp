@@ -6,34 +6,38 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated'
 import { theme } from './util/color';
 
-type DayData = {
+interface DayData {
     date:number,
     thisM:boolean,
     color:number, // 0: 회색, 1: 흰색, 2: 빨간색, 3: 파란색
 };
-type Position = {
+interface Position {
     col:number,
     row:number
 };
+
 const dayPalette = ['gray', 'white', 'red', 'blue'];
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 type CalendarProps = {
     setFocusLine: (target:number) => void,
-    targetDay: number,
+    setFocusDay: (target:Date) => void,
 }
 
-export type CalendarRefProps = {
-    changeDate: (target:Date) => void;
+export interface YMD {
+    year:number,
+    month:number,
+    day:number
 }
 
-const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLine, targetDay}, ref) => {
-    // const [parentHeight, setParentHeight] = useState(0);
-    // const onLayout = (event:LayoutChangeEvent) => {
-    //   const {height} = event.nativeEvent.layout;
-    //   setParentHeight(height);
-    // };
-    const [targetDate, setTargetDate] = useState<Date>(new Date());
+export interface CalendarRefProps {
+    changeDate: (target:Date) => void; //target으로 렌더링될 날짜 변경
+}
+
+const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLine, setFocusDay}, ref) => {
+
+    // targetMonth에는 목표 달의 1일 혹은 마지막일로 설정된다.
+    const [pageTarget, setPageTarget] = useState<Date>(new Date());
     const [focusBlock, setFocusBlock] = useState<Position>();
     const toDayBlock:Position = {
         col:0,
@@ -41,29 +45,24 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
     }
 
     const initFocusBlock = useMemo(() => {
-        console.log("Memo" + targetDate);
+        console.log("|Calender| Memo call");
         // 첫날 계산.
-        const firstDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1)
-        const temp = firstDate.getDay()+targetDate.getDate()-1; //getDate는 시작이 1이기에 1을 빼줌.
-        console.log("temp" + temp);
+        const firstDate = new Date(pageTarget.getFullYear(), pageTarget.getMonth(), 1)
+        const temp = firstDate.getDay()+pageTarget.getDate()-1; //getDate는 시작이 1이기에 1을 빼줌.
+        console.log("|Calendar| temp : " + temp);
         var row:number, col:number;
         row = Math.floor(temp/7)
-        col = targetDate.getDay();
+        col = pageTarget.getDay();
+        setFocusLine(row);
         setFocusBlock({
             row:row,
             col:col
         })
-    },[targetDate]);
-
-    useEffect(()=>{
-        console.log("page : "+targetDay + ", focus : " + focusBlock?.row);
-        if(focusBlock!==undefined) 
-            setFocusLine(focusBlock.row);
-    },[targetDate]);
+    },[pageTarget]);
 
     const changeDate = useCallback((target:Date)=>{
-        console.log(target);
-        setTargetDate(target);
+        console.log("|Calendar| change Date");
+        setPageTarget(target);
     },[]);
 
     //네비게이션의 버튼이 targetDate를 변경시킴
@@ -82,15 +81,16 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
 
     //해당 달의 달력을 생성
     const getRecentCal = () => { 
-        console.log("getRecentCal" + targetDay);
-        if (!targetDate){
-            console.log("날짜 불러오기 실패")
+        if (!pageTarget || !focusBlock){
+            console.log("|Calendar| 날짜 불러오기 실패")
             return;
         }
+        console.log("|Calendar| call getRecentCal");
+        console.log(focusBlock);
         const today = new Date();   //현재 시간을 받아옴
         const todayDate = today.getDate();
-        const thisYear = targetDate.getFullYear();
-        const thisMonth = targetDate.getMonth();
+        const thisYear = pageTarget.getFullYear();
+        const thisMonth = pageTarget.getMonth();
         
         const preLastDateD = new Date(thisYear, thisMonth, 0).getDate();    //작년으로 넘어가도 문제 없음
         const firstDate = new Date(thisYear, thisMonth, 1);
@@ -130,13 +130,17 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
     
     getRecentCal();
 
-    const styleTest = (test:number, test2:number) => {
+    const blockStyle = (test:number, test2:number) => {
         if(test==focusBlock?.row && test2==focusBlock?.col)
             return {borderColor: 'red'} 
         else if(test==toDayBlock['row'] && test2 == toDayBlock['col'])
             return {borderColor: 'blue'}
         else 
             return {}
+    }
+
+    const onPress = () => {
+        
     }
 
     return (
@@ -149,9 +153,16 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
                             setFocusBlock({
                                 row:index,
                                 col:index2
-                            })
+                            });
+                            setFocusDay(
+                                new Date(
+                                    pageTarget.getFullYear(), 
+                                    pageTarget.getMonth(), 
+                                    recentCal[index][index2].date
+                                    )
+                                )
                             setFocusLine(index);
-                            }} style={[styles.rowItem, styleTest(index, index2)]}>
+                            }} style={[styles.rowItem, blockStyle(index, index2)]}>
                             <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
                                 {value.date}
                             </Text>

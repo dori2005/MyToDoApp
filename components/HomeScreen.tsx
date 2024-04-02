@@ -3,7 +3,6 @@ import { Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native'
 import Calendar, { CalendarRefProps } from './Calendar';
 import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StackScreenProps, createStackNavigator } from '@react-navigation/stack';
-import ToDoComponent, { ToDoComponentRefProps } from './ToDoComponent';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,13 +24,31 @@ type LOGIN_DATA = {
   token : string,
 }
 
+export interface YMD {
+  year:number,
+  month:number,
+  day:number
+}
+
 const HomeScreen = ({navigation} : HomeScreenProps) => {
   const [loginData, setLoginData] = useState<LOGIN_DATA>();
   const [login, setLogin] = useState(false);
   const [focusLine, setFocusLine] = useState(0);
+  const [focusDate, setFocusDate] = useState<Date>(new Date());
   
   const onFocusLine = (target:number) => {
+    console.log("|Home| onFocusLine")
     setFocusLine(target);
+  }
+
+  const onFocusDate = (target:Date) => {
+    console.log("|Home| onFocusDate")
+    // const ymd:YMD = {
+    //   year:target.getFullYear(),
+    //   month:target.getMonth(),
+    //   day:target.getDate()
+    // }
+    setFocusDate(target);
   }
 
   const loadLoginData = async () => {
@@ -95,15 +112,16 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   const refCal = useRef<CalendarRefProps>(null);
   let page = 0;
   const today = new Date();
-  let targetday:Date;
 
   const toStringYM = (day:Date) => 
     day.getFullYear().toString() + "." + (day.getMonth()+1).toString();
+    
   const [targetYM, setTargetYM] = useState(toStringYM(today));
 
   const onPressNext = useCallback(()=> {
     page++;
     const targetday = new Date(today.getFullYear(), today.getMonth()+page, 1);
+    setFocusDate(targetday);
     setTargetYM(toStringYM(targetday));
     refCal?.current?.changeDate(targetday);
   },[]);
@@ -111,6 +129,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   const onPressPre = useCallback(()=> {
     page--;
     const targetday = new Date(today.getFullYear(), today.getMonth()+page+1, 0);
+    setFocusDate(targetday);
     setTargetYM(toStringYM(targetday));
     refCal?.current?.changeDate(targetday);
   },[]);
@@ -191,8 +210,8 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     <GestureHandlerRootView style={{flex:1}}>
       <View style={styles.container}>  
         <StatusBar style="light" />
-        <BottomSheet focusLine={focusLine} ref={refBS}>
-          <Calendar setFocusLine={onFocusLine} targetDay={0} ref={refCal}/>
+        <BottomSheet focusLine={focusLine} focusDate={focusDate} ref={refBS}>
+          <Calendar setFocusLine={onFocusLine} setFocusDay={onFocusDate} ref={refCal}/>
         </BottomSheet>
       </View>
       <View style={styles.add_button_view}>

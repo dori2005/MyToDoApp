@@ -2,7 +2,7 @@ import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue,
 import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useCallback, useEffect, useImperativeHandle, useRef } from 'react'
-import ToDoComponent, { ToDoComponentRefProps } from './ToDoComponent'
+import ToDoListComponent, { ToDoListComponentRefProps } from './ToDoListComponent'
 import {focus, focus2, heads, property} from '../resources/test'
 
 import Calendar from './Calendar'
@@ -19,6 +19,7 @@ const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*153/200  //맨 아래가 0에서부터 �
 type BottomSheetProps = {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
     children?: React.ReactNode,
     focusLine: number,
+    focusDate: Date,
 }
 
 export type BottomSheetRefProps = {    //TS에서 메소드를 export하기위한 type 선언 같이 보임. 
@@ -28,7 +29,7 @@ export type BottomSheetRefProps = {    //TS에서 메소드를 export하기위�
 }   //이후 useImperativeHandle로 input과 output을 조립하는듯 하다.
 
 const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-    ({children, focusLine}, ref) => {  //(하위 컴포넌트, 파라미터)
+    ({children, focusLine, focusDate}, ref) => {  //(하위 컴포넌트, 파라미터)
     const translateY = useSharedValue(0)
     const active = useSharedValue(false);
     
@@ -40,7 +41,6 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
         //worklet은 Reanimated에 필수적인듯 함.
         //동기적으로 호출이 가능하게 된다고 한다.
         'worklet';  
-        console.log("test");
         
         active.value = destination !== 0;
 
@@ -51,7 +51,7 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
         return active.value;
     }, []);
 
-    const refToDo = useRef<ToDoComponentRefProps>(null);
+    const refToDo = useRef<ToDoListComponentRefProps>(null);
     const loadToDoList = (token:string)=>refToDo?.current?.loadToDos(token);
 
     // TS로 인한 코드
@@ -118,7 +118,7 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
                             {children}
                         </Animated.View>
                     </View>
-                    <ToDoComponent ref={refToDo}/>
+                    <ToDoListComponent selectDate={focusDate} ref={refToDo}/>
                     <View style={styles.line}/>
                 </Animated.View>
                 <View style={[styles.headerRow]}>  

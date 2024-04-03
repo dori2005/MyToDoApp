@@ -14,8 +14,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FontAwesome } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { theme } from './util/color';
-import Realm, { ObjectSchema, open } from 'realm';
+import Realm from 'realm';
 import { ToDo } from './Object/ToDo';
+import {useQuery} from '@realm/react';
+import { Schedule, ScheduleData } from './Object/Schedule';
 
 
 const server = require('./util/saveTodo');
@@ -60,25 +62,34 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
     const openLocalDB = async () => {
       try {
         realm = await Realm.open({
-          schema: [ToDo.schema],
-          schemaVersion: 4,
+          schema: [ToDo.schema, Schedule.schema],
+          schemaVersion: 11,
         });
       }catch(e) {
         console.log(e);
       }
-      readDB();
+
+      const select = selectDate.getFullYear().toString()+selectDate.getMonth().toString()+selectDate.getDate().toString()
+      roadSchedule(select);
     };
 
     const readDB = () => {
-      const tasks = realm?.objects('Todo');
-      console.log(tasks);
+      //const tasks = realm?.objects('Todo');
+      const tasks1 = realm?.objects('Todo');
+      console.log(tasks1);
     }
-    const roadDB = (date:Date) => {
+    const roadDB = (date:string) => {
       const tasks = realm?.objects('Todo').filtered(`complete = false`);
       console.log(tasks);
     }
+    const roadSchedule = (date:string) => {
+      console.log("|ToDo| road schedule - " + date);
+      const tasks = realm?.objects('Schedule').filtered(`date=${date}`);
+      console.log("|ToDo| road complete schedule");
+      console.log(tasks);
+    }
 
-    const createDB = (key:string, data:TodoData) => {
+    const createTodo = (key:string, data:TodoData) => {
       realm?.write(() => {
         realm.create('Todo', {
             id: key,
@@ -87,13 +98,38 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
         })
       });
     }
-    const deleteDB = (key:string) => {
+
+    const createSchedule = (key:string, data:ScheduleData) => {
       realm?.write(() => {
-        realm.delete('Todo');
+        realm.create('Schedule', {
+            id: key,
+            text: data.text,
+            date: data.date,
+            complete: data.complete,
+        })
       });
     }
-    const updateDB = (key:string) => {
+
+    const deleteDB = () => {
       realm?.write(() => {
+        realm.deleteAll();
+      });
+    }
+    const deleteTodo = (key:string) => {
+      const del = realm?.objects('Todo').filtered(`id = '${key}'`)[0];
+      console.log(del);
+
+      realm?.write(() => {
+        realm.delete(del);
+      });
+    }
+    const updateTodo = (key:string, data:TodoData) => {
+      realm?.write(() => {
+        realm.create('Todo', {
+            id: key,
+            text: 'data.text',
+            complete: 'data.complete',
+        }, Realm.UpdateMode.Modified)
       });
     }
 
@@ -117,16 +153,19 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
       if (text === "") {
         return
       }
-      const time = Date.now().toString();
+      const time = new Date();
+      const key = time.getFullYear().toString()+time.getMonth().toString()+time.getDate().toString();
+      console.log(key);
       const newToDos = {
         ...toDos,
-        [time]: { text, complete: false },
+        [key]: { text, complete: false },
       };
       const data = { text, complete: false };
-  
+      const schedule_data = { text, date:key, complete: false,  };
   
       setToDos(newToDos);
-      createDB(time, data);
+      createSchedule(key, schedule_data);
+      //createTodo(key, data);
       await server.renewUpdate(0, time, data);
       setText("");
     }
@@ -135,6 +174,9 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
         const newToDos = { ...toDos };
         delete newToDos[key];
         setToDos(newToDos);
+        console.log("delete ToDo");
+        deleteTodo(key);
+        console.log("delete ToDo2");
         server.renewUpdate(2, key);
       }
       
@@ -192,7 +234,6 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
             text: editText, 
             complete: toDos[key].complete
           });
-        //await server.saveEditToDo(key, editText, true);
       } else {
         if(Platform.OS == "web") {
           const ok = confirm("To Do is Empty.")

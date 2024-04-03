@@ -13,7 +13,7 @@ const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 //BOTTOM SHEET의 최고 높이 제한. web에서는 오류 자주남
 //상단 여백 1/10, 하단여백 9/100, 캘린더 칸당 81/100 * 1/6 = 27/200
 //상단 여백 + 캘린더 한칸 = 27/200 + 1/10 = 47/200
-//MAX_TRANSLATE_Y = -(1 - 47/200) = -153/200
+//-(1 - 47/200) = -153/200
 const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*153/200  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
 
 type BottomSheetProps = {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
@@ -28,15 +28,13 @@ export type BottomSheetRefProps = {    //TS에서 메소드를 export하기위�
     loadToDoList: (token:string) => void,
 }   //이후 useImperativeHandle로 input과 output을 조립하는듯 하다.
 
-const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(
-    ({children, focusLine, focusDate}, ref) => {  //(하위 컴포넌트, 파라미터)
+const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({children, focusLine, focusDate}, ref) => {  //(하위 컴포넌트, 파라미터)
     const translateY = useSharedValue(0)
     const active = useSharedValue(false);
     
     const scrollTo = useCallback((destination: number) => { // 그저 callback 함수 생성
-        //tried to synchronously call anonymous function from a different thread.
-        // 위 에러 방지, 과거엔 쓰였는데, 지금은 필요없어진듯
-        //아니. 지금도 필요하다. IOS에선 필요한것을 확인. 없을경우 어떠한 동작도 없이 팅긴다.
+        //tried to synchronously call anonymous function from a different thread. 에러 방지
+        //IOS에선 없을경우 어떠한 동작도 없이 팅긴다.
         //gesture를 통한 호출시에 팅김현상 발생
         //worklet은 Reanimated에 필수적인듯 함.
         //동기적으로 호출이 가능하게 된다고 한다.

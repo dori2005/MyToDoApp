@@ -1,18 +1,20 @@
 import Realm, { ObjectSchema } from "realm";
 
-export class ToDo extends Realm.Object<ToDo> {
+export class Schedule extends Realm.Object<Schedule> {
     id!: string;
     text!: string;
+    date!: string;
     complete!: boolean;
-    completeDate?: string;
+    habit_id?:string;
     timestamp: number = Math.round(new Date().getTime() / 1000);
     static schema: ObjectSchema = {
-      name: 'Todo',
+      name: 'Schedule',
       properties: {
         id: 'string',
         text: 'string',
+        date: 'string',
         complete: { type: 'bool', default: false },
-        completeDate: 'string?', // == 'string?'
+        habit_id: 'string?',
         timestamp: {
           type: 'int',
           default: () => Math.round(new Date().getTime() / 1000),
@@ -21,3 +23,10 @@ export class ToDo extends Realm.Object<ToDo> {
       primaryKey: 'id',
     };
   }
+
+export interface ScheduleData {
+  //id: string,
+  text: string,
+  date: string,
+  complete: boolean
+}

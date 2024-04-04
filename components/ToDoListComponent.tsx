@@ -43,7 +43,7 @@ export interface ToDoListComponentRefProps {
 
 var realm:Realm;
 
-const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponentProps>(({selectDate},ref) => {
+const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListComponentProps>(({selectDate},ref) => {
     const [working, setWorking] = useState(true);
     const [editing, setEditing] = useState("");
     const [text, setText] = useState("");
@@ -63,7 +63,7 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
       try {
         realm = await Realm.open({
           schema: [ToDo.schema, Schedule.schema],
-          schemaVersion: 11,
+          schemaVersion: 0,
         });
       }catch(e) {
         console.log(e);
@@ -84,9 +84,15 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
     }
     const roadSchedule = (date:string) => {
       console.log("|ToDo| road schedule - " + date);
-      const tasks = realm?.objects('Schedule').filtered(`date=${date}`);
+      const tasks = realm?.objects('Schedule').filtered(`date = '${date}'`);
       console.log("|ToDo| road complete schedule");
       console.log(tasks);
+
+      const todo:TodoList = {};
+      tasks.map((ob)=>{
+        todo[ob["id"]] = { "text":ob["text"], "complete":ob["complete"]==0?false:true };
+      })
+      setToDos(todo);
     }
 
     const createTodo = (key:string, data:TodoData) => {
@@ -99,7 +105,10 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
       });
     }
 
-    const createSchedule = (key:string, data:ScheduleData) => {
+    const addToDoInList = () => {
+    }
+
+    const realmCreateSchedule = (key:string, data:ScheduleData) => {
       realm?.write(() => {
         realm.create('Schedule', {
             id: key,
@@ -110,13 +119,21 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
       });
     }
 
-    const deleteDB = () => {
+    const realmDeleteDB = () => {
       realm?.write(() => {
         realm.deleteAll();
       });
     }
-    const deleteTodo = (key:string) => {
+    const realmDeleteTodo = (key:string) => {
       const del = realm?.objects('Todo').filtered(`id = '${key}'`)[0];
+      console.log(del);
+
+      realm?.write(() => {
+        realm.delete(del);
+      });
+    }
+    const realmDeleteSchedule = (key:string) => {
+      const del = realm?.objects('Schedule').filtered(`id = '${key}'`)[0];
       console.log(del);
 
       realm?.write(() => {
@@ -153,18 +170,19 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
       if (text === "") {
         return
       }
-      const time = new Date();
-      const key = time.getFullYear().toString()+time.getMonth().toString()+time.getDate().toString();
-      console.log(key);
+      const time = Date.now().toString();
+      console.log("Key : "+time);
+      const select = selectDate.getFullYear().toString()+selectDate.getMonth().toString()+selectDate.getDate().toString()
+      console.log("select date : "+select);
       const newToDos = {
         ...toDos,
-        [key]: { text, complete: false },
+        [time]: { text, complete: false },
       };
       const data = { text, complete: false };
-      const schedule_data = { text, date:key, complete: false,  };
+      const schedule_data = { text, date:select, complete: false,  };
   
       setToDos(newToDos);
-      createSchedule(key, schedule_data);
+      realmCreateSchedule(time, schedule_data);
       //createTodo(key, data);
       await server.renewUpdate(0, time, data);
       setText("");
@@ -175,7 +193,7 @@ const ToDoComponent =React.forwardRef<ToDoListComponentRefProps,ToDoListComponen
         delete newToDos[key];
         setToDos(newToDos);
         console.log("delete ToDo");
-        deleteTodo(key);
+        realmDeleteSchedule(key);
         console.log("delete ToDo2");
         server.renewUpdate(2, key);
       }

@@ -18,7 +18,7 @@ const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
 export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
 const STORAGE_KEY_LOGIN = "@LoginData"
-const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*3/4 
+const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*153/200
 
 type LOGIN_DATA = {
   token : string,
@@ -35,21 +35,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   const [login, setLogin] = useState(false);
   const [focusLine, setFocusLine] = useState(0);
   const [focusDate, setFocusDate] = useState<Date>(new Date());
-  
-  const onFocusLine = (target:number) => {
-    console.log("|Home| onFocusLine")
-    setFocusLine(target);
-  }
-
-  const onFocusDate = (target:Date) => {
-    console.log("|Home| onFocusDate")
-    // const ymd:YMD = {
-    //   year:target.getFullYear(),
-    //   month:target.getMonth(),
-    //   day:target.getDate()
-    // }
-    setFocusDate(target);
-  }
 
   const loadLoginData = async () => {
     try {
@@ -101,6 +86,27 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
       refBS?.current?.scrollTo(MAX_TRANSLATE_Y); // 스크롤을 -200으로 그럼 scrollTo에서 0이 아니여서 active를 활성화 한다.
     }
   }, []);
+
+
+  const onFocusLine = (target:number) => {
+    console.log("|Home| onFocusLine")
+    setFocusLine(target);
+
+    const isActive = refBS?.current?.isActive();
+    if(!isActive) {
+      refBS?.current?.scrollTo(MAX_TRANSLATE_Y)
+    }
+  }
+
+  const onFocusDate = (target:Date) => {
+    console.log("|Home| onFocusDate")
+    // const ymd:YMD = {
+    //   year:target.getFullYear(),
+    //   month:target.getMonth(),
+    //   day:target.getDate()
+    // }
+    setFocusDate(target);
+  }
 
   const loadToDoList = useCallback(()=>{
     console.log("called loadTodoList");

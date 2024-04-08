@@ -28,5 +28,6 @@ export interface ScheduleData {
   //id: string,
   text: string,
   date: string,
-  complete: boolean
+  complete: boolean,
+  color: number,
 }

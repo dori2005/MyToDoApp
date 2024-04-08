@@ -116,6 +116,7 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({ch
                             {children}
                         </Animated.View>
                     </View>
+                    {children}
                     <ToDoListComponent selectDate={focusDate} ref={refToDo}/>
                     <View style={styles.line}/>
                 </Animated.View>

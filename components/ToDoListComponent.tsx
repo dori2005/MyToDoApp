@@ -8,7 +8,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import React, { useCallback, useEffect, useImperativeHandle, useState } from "react";
+import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FontAwesome } from '@expo/vector-icons';
@@ -29,6 +29,12 @@ interface TodoData {
   text:string,
   complete:boolean,
 };
+interface DateData {
+  year:number,
+  month:number,
+  day:number,
+}
+
 interface TodoList {
   [key:string] : TodoData,
 }
@@ -62,8 +68,8 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
     const openLocalDB = async () => {
       try {
         realm = await Realm.open({
-          schema: [ToDo.schema, Schedule.schema],
-          schemaVersion: 0,
+          schema: [ToDo, Schedule],
+          schemaVersion: 11,
         });
       }catch(e) {
         console.log(e);
@@ -89,8 +95,8 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
       console.log(tasks);
 
       const todo:TodoList = {};
-      tasks.map((ob)=>{
-        todo[ob["id"]] = { "text":ob["text"], "complete":ob["complete"]==0?false:true };
+      tasks.map((ob:any)=>{
+        todo[ob["id"]] = { "text":ob["text"], "complete":ob["complete"] };
       })
       setToDos(todo);
     }
@@ -179,7 +185,7 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
         [time]: { text, complete: false },
       };
       const data = { text, complete: false };
-      const schedule_data = { text, date:select, complete: false,  };
+      const schedule_data = { text, date:select, complete: false, color: 0 };
   
       setToDos(newToDos);
       realmCreateSchedule(time, schedule_data);

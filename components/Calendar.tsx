@@ -2,9 +2,13 @@ import { Dimensions, LayoutChangeEvent, NativeUIEvent, StyleSheet, Text, View } 
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import {bodyDatas, heads, property} from '../resources/test'
 
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated'
 import { theme } from './util/color';
+import { ToDo } from './Object/ToDo';
+import { Schedule } from './Object/Schedule';
+
+import Realm from 'realm';
 
 interface DayData {
     date:number,
@@ -15,12 +19,21 @@ interface Position {
     col:number,
     row:number
 };
+interface MiniTodo {
+    id:string,
+    color:number,
+    complete:boolean,
+}
+interface MiniTodoList {
+    [day:number]: MiniTodo[]
+}
 
 const dayPalette = ['gray', 'white', 'red', 'blue'];
+var realm:Realm;
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 type CalendarProps = {
-    setFocusLine: (target:number) => void,
+    setFocusLine: (target:number, activeBottom:boolean) => void,
     setFocusDay: (target:Date) => void,
 }
 
@@ -37,6 +50,7 @@ export interface CalendarRefProps {
 const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLine, setFocusDay}, ref) => {
 
     // targetMonth에는 목표 달의 1일 혹은 마지막일로 설정된다.
+    const [miniTodoList, setMiniTodoList] = useState<MiniTodo[][]>(new Array(31).fill([]));
     const [pageTarget, setPageTarget] = useState<Date>(new Date());
     const [focusBlock, setFocusBlock] = useState<Position>();
     const toDayBlock:Position = {
@@ -53,12 +67,50 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
         var row:number, col:number;
         row = Math.floor(temp/7)
         col = pageTarget.getDay();
-        setFocusLine(row);
+        setFocusLine(row, false);
         setFocusBlock({
             row:row,
             col:col
         })
     },[pageTarget]);
+
+    useEffect(()=>{
+        openLocalDB();
+
+        return () => {
+          realm?.close();
+        };
+    },[pageTarget])
+
+    const openLocalDB = async () => {
+        try {
+          realm = await Realm.open({
+            schema: [ToDo, Schedule],
+            schemaVersion: 11,
+          });
+        }catch(e) {
+          console.log(e);
+        }
+        roadAllSchedule();
+    }
+    const roadSchedule = (date:string) => {
+      const tasks = realm?.objects('Schedule').filtered(`date = '${date}'`);
+
+      const todoList:MiniTodo[] = [];
+      tasks.map((ob:any)=>{
+        todoList.push({ "id":ob["id"], "color":0, "complete":ob["complete"] });
+      })
+      return todoList;
+    }
+    const roadAllSchedule = () => {
+        const ym = pageTarget.getFullYear().toString() + pageTarget.getMonth().toString();
+        const lastDate = new Date(pageTarget.getFullYear(), pageTarget.getMonth() + 1, 0).getDate();
+        const todoListOfMon:MiniTodo[][] = new Array(31).fill([]);
+        for (let i = 1; i <= lastDate; i++) {
+            todoListOfMon[i-1] = roadSchedule(ym+i.toString());
+        }
+        setMiniTodoList(todoListOfMon);
+    }
 
     const changeDate = useCallback((target:Date)=>{
         console.log("|Calendar| change Date");
@@ -92,19 +144,19 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
         const thisYear = pageTarget.getFullYear();
         const thisMonth = pageTarget.getMonth();
         
-        const preLastDateD = new Date(thisYear, thisMonth, 0).getDate();    //작년으로 넘어가도 문제 없음
-        const firstDate = new Date(thisYear, thisMonth, 1);
-        const lastDateD = new Date(thisYear, thisMonth + 1, 0).getDate();
+        const preMonLastDate = new Date(thisYear, thisMonth, 0).getDate();    //작년으로 넘어가도 문제 없음
+        const firstDay = new Date(thisYear, thisMonth, 1);
+        const lastDate = new Date(thisYear, thisMonth + 1, 0).getDate();
 
-        let day = -firstDate.getDay(); //sunday = 0, saturday = 6
+        let day = -firstDay.getDay(); //sunday = 0, saturday = 6
         let nextMCount = 1;
 
         recentCal.map((array,row)=> {
             array.map((value:DayData,col)=> {
                 value.color = 0;
                 if ( day++ < 0 )
-                    value.date = preLastDateD + day;
-                else if( day <= lastDateD ) {
+                    value.date = preMonLastDate + day;
+                else if( day <= lastDate ) {
                     if(day === todayDate){
                         if(today.getMonth() == thisMonth && today.getFullYear() == thisYear){
                             toDayBlock['row'] = row;
@@ -139,33 +191,56 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
             return {}
     }
 
-    const onPress = () => {
-        
-    }
+//      <View style={styles.miniToDoViewRow}>
+//          {value.thisM?(miniTodoList[value.date-1]?.map((data)=>{
+//          console.log(value.date);
+//          console.log(data);
+//          return(
+//          <View style={styles.miniToDoView}>
+//             <View style={{...styles.miniToDo,
+//                 backgroundColor:data.complete?"blue":theme.background}}/>
+//          </View>)
+//          })):null}
+//      </View>
+const onPressDate = useCallback((value:DayData, idx:number, idx2:number)=>{
+    console.log("Focus" + value.date);
+    if(value.thisM) {
+        setFocusBlock({
+            row:idx,
+            col:idx2
+        });
+        setFocusDay(
+            new Date(
+                pageTarget.getFullYear(), 
+                pageTarget.getMonth(), 
+                recentCal[idx][idx2].date
+                )
+            )
+        setFocusLine(idx, true);
+    }},[])
 
     return (
         <View style={styles.test}>
             {recentCal.map((array, index) => ( // 가로줄, 행을 생성
                 <View key={index} style={styles.row}>  
                     {array.map((value, index2) => (
-                        <TouchableOpacity key={index2} onPress={()=>{
-                            console.log("Focus" + index);
-                            setFocusBlock({
-                                row:index,
-                                col:index2
-                            });
-                            setFocusDay(
-                                new Date(
-                                    pageTarget.getFullYear(), 
-                                    pageTarget.getMonth(), 
-                                    recentCal[index][index2].date
-                                    )
-                                )
-                            setFocusLine(index);
-                            }} style={[styles.rowItem, blockStyle(index, index2)]}>
-                            <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
-                                {value.date}
-                            </Text>
+                        <TouchableOpacity key={index2} onPress={()=>onPressDate(value,index,index2)}
+                         style={[styles.rowItem, blockStyle(index, index2)]}>
+                                <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
+                                    {value.date}
+                                </Text>
+                                {value.thisM?(<FlatList
+                                data={miniTodoList[value.date-1]}
+                                style={styles.miniToDoViewRow}
+                                numColumns={3}
+                                renderItem={({item})=>{
+                                    return(
+                                    <View style={styles.miniToDoView}>
+                                        <View style={{...styles.miniToDo,
+                                            backgroundColor:item.complete?"blue":theme.background}}/>
+                                    </View>)}
+                                }>
+                                </FlatList>):null}
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -200,4 +275,19 @@ const styles = StyleSheet.create({
         borderColor:'white',
         backgroundColor : theme.background,
     },
+    miniToDoViewRow: {
+        width: SCREEN_WIDTH/9,
+        height: SCREEN_HEIGHT * 3/40, // 27/200* 5/9
+    },
+    miniToDoView : {
+        width: SCREEN_WIDTH/27,
+        height: SCREEN_HEIGHT * 1/40,
+        padding:2
+    },
+    miniToDo : {
+        borderWidth:3,
+        borderColor:"blue",
+        borderRadius:3,
+        flex:1,
+    }
 })

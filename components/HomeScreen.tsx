@@ -12,6 +12,7 @@ import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
 import signAlert from './util/Tools';
 import { theme } from './util/color';
+import ToDoComponent from './ToDoListComponent';
 
 const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
 
@@ -88,12 +89,16 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   }, []);
 
 
-  const onFocusLine = (target:number) => {
+  const onFocusLine = (target:number, activeBottom:boolean) => {
     console.log("|Home| onFocusLine")
     setFocusLine(target);
 
     const isActive = refBS?.current?.isActive();
-    if(!isActive) {
+    if(!activeBottom && isActive) {
+      refBS?.current?.scrollTo(0)
+      return;
+    }
+    if(activeBottom && !isActive) {
       refBS?.current?.scrollTo(MAX_TRANSLATE_Y)
     }
   }
@@ -218,6 +223,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         <StatusBar style="light" />
         <BottomSheet focusLine={focusLine} focusDate={focusDate} ref={refBS}>
           <Calendar setFocusLine={onFocusLine} setFocusDay={onFocusDate} ref={refCal}/>
+          <View/>
         </BottomSheet>
       </View>
       <View style={styles.add_button_view}>

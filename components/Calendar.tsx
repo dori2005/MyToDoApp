@@ -182,11 +182,30 @@ const onPressDate = useCallback((value:DayData, idx:number, idx2:number)=>{
     }},[])
 
 const renderMiniToDo = (today:number) => {
-    miniTodoList[today].length  //3, 6, 9 보다 클때를 구분
-    return(
-    <View>
+    const len = Math.floor(miniTodoList[today].length/3)  //3, 6, 9 보다 클때를 구분
+    const sub_len = miniTodoList[today].length%3;
+    const subArray:MiniTodo[][] = new Array(len+1).fill([]);
 
-    </View>
+    let i = 0;
+    for(; i < len; i++) {
+        subArray[i] = miniTodoList[today].slice(i*3, i*3+3);
+    }
+    if (sub_len != 0)
+        subArray[i] = miniTodoList[today].slice(i*3, i*3+sub_len);
+
+    return(
+        <View style={styles.miniToDoBlock}>
+            {subArray.map((rows)=>(
+                <View style={styles.miniToDoRow}>
+                    {rows.map((item)=>{
+                        return(<View style={styles.miniToDoView}>
+                            <View style={{...styles.miniToDo,
+                                backgroundColor:item.complete?"blue":theme.background}}/>
+                        </View>
+                    )})}
+                </View>
+            ))}
+        </View>
     )
 }
 
@@ -200,18 +219,7 @@ const renderMiniToDo = (today:number) => {
                                 <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
                                     {value.date}
                                 </Text>
-                                {value.thisM?(
-                                <FlatList
-                                data={miniTodoList[value.date-1]}
-                                style={styles.miniToDoViewRow}
-                                numColumns={3}
-                                renderItem={({item})=>{
-                                    return(
-                                    <View style={styles.miniToDoView}>
-                                        <View style={{...styles.miniToDo,
-                                            backgroundColor:item.complete?"blue":theme.background}}/>
-                                    </View>)}
-                                }/>):null}
+                                {value.thisM?(renderMiniToDo(value.date-1)):null}
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -246,14 +254,17 @@ const styles = StyleSheet.create({
         borderColor:'white',
         backgroundColor : theme.background,
     },
-    miniToDoViewRow: {
+    miniToDoBlock: {
         width: SCREEN_WIDTH/9,
         height: SCREEN_HEIGHT * 3/40, // 27/200* 5/9
     },
-    miniToDoView : {
+    miniToDoRow: {
+        flexDirection: 'row',
+    },
+    miniToDoView: {
         width: SCREEN_WIDTH/27,
         height: SCREEN_HEIGHT * 1/40,
-        padding:2
+        padding:2,
     },
     miniToDo : {
         borderWidth:3,

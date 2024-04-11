@@ -17,18 +17,16 @@ const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*153/200  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
 
 type BottomSheetProps = {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
-    children?: React.ReactNode,
-    focusLine: number,
-    focusDate: Date,
+    children?: React.ReactNode[],
+    focusLine: number
 }
 
 export type BottomSheetRefProps = {    //TS에서 메소드를 export하기위한 type 선언 같이 보임. 
     scrollTo: (destination: number) => void,
-    isActive: () => boolean,
-    loadToDoList: (token:string) => void,
+    isActive: () => boolean
 }   //이후 useImperativeHandle로 input과 output을 조립하는듯 하다.
 
-const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({children, focusLine, focusDate}, ref) => {  //(하위 컴포넌트, 파라미터)
+const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({children, focusLine}, ref) => {  //(하위 컴포넌트, 파라미터)
     const translateY = useSharedValue(0)
     const active = useSharedValue(false);
     
@@ -49,15 +47,11 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({ch
         return active.value;
     }, []);
 
-    const refToDo = useRef<ToDoListComponentRefProps>(null);
-    const loadToDoList = (token:string)=>refToDo?.current?.loadToDos(token);
-
     // TS로 인한 코드
     // BottomSheetRefProps와 관련있는듯
-    useImperativeHandle(ref, () => ({scrollTo, isActive, loadToDoList}), [
+    useImperativeHandle(ref, () => ({scrollTo, isActive}), [
         scrollTo,
         isActive, //모든 외부 사용 함수를 넣어줘야 되는듯 함
-        loadToDoList
     ]);   //외부에 ref에 내부 함수를 대입하는 과정같다.
 
     const context = useSharedValue({ y: 0});
@@ -107,17 +101,18 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({ch
         return {};
     })
 
+    if(!children)   // 귀찮다면 이정도 깡다구는 필요하지.
+        return(<View/>);
     return (
         <GestureDetector gesture={gesture}>
             <View style={styles.touchBaseSheet}>
                 <Animated.View style={[styles.bottomSheetContainer, rBottomSheetStyle]}>
                     <View style={styles.underPanel}>
                         <Animated.View style={[styles.calendarBody, focusOnDay]}>
-                            {children}
+                            {children[0]}
                         </Animated.View>
                     </View>
-                    {children}
-                    <ToDoListComponent selectDate={focusDate} ref={refToDo}/>
+                    {children[1]}
                     <View style={styles.line}/>
                 </Animated.View>
                 <View style={[styles.headerRow]}>  

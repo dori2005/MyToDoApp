@@ -13,6 +13,7 @@ import Realm from 'realm';
 interface DayData {
     date:number,
     thisM:boolean,
+    select:boolean,
     color:number, // 0: 회색, 1: 흰색, 2: 빨간색, 3: 파란색
 };
 interface Position {
@@ -24,17 +25,14 @@ interface MiniTodo {
     color:number,
     complete:boolean,
 }
-interface MiniTodoList {
-    [day:number]: MiniTodo[]
-}
 
 const dayPalette = ['gray', 'white', 'red', 'blue'];
 var realm:Realm;
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 type CalendarProps = {
-    setFocusLine: (target:number, activeBottom:boolean) => void,
-    setFocusDay: (target:Date) => void,
+    setFocusDay: (target:Date, line:number, activeBottom:boolean) => void,
+    pageTarget: Date
 }
 
 export interface YMD {
@@ -47,32 +45,17 @@ export interface CalendarRefProps {
     changeDate: (target:Date) => void; //target으로 렌더링될 날짜 변경
 }
 
-const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLine, setFocusDay}, ref) => {
+//
+// Calendar 컴포넌트 정의
+//
+const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay, pageTarget}, ref) => {
 
     // targetMonth에는 목표 달의 1일 혹은 마지막일로 설정된다.
     const [miniTodoList, setMiniTodoList] = useState<MiniTodo[][]>(new Array(31).fill([]));
-    const [pageTarget, setPageTarget] = useState<Date>(new Date());
-    const [focusBlock, setFocusBlock] = useState<Position>();
     const toDayBlock:Position = {
-        col:0,
-        row:0
+        col:-1,
+        row:-1
     }
-
-    const initFocusBlock = useMemo(() => {
-        console.log("|Calender| Memo call");
-        // 첫날 계산.
-        const firstDate = new Date(pageTarget.getFullYear(), pageTarget.getMonth(), 1)
-        const temp = firstDate.getDay()+pageTarget.getDate()-1; //getDate는 시작이 1이기에 1을 빼줌.
-        console.log("|Calendar| temp : " + temp);
-        var row:number, col:number;
-        row = Math.floor(temp/7)
-        col = pageTarget.getDay();
-        setFocusLine(row, false);
-        setFocusBlock({
-            row:row,
-            col:col
-        })
-    },[pageTarget]);
 
     useEffect(()=>{
         openLocalDB();
@@ -93,6 +76,7 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
         }
         roadAllSchedule();
     }
+
     const roadSchedule = (date:string) => {
       const tasks = realm?.objects('Schedule').filtered(`date = '${date}'`);
 
@@ -102,6 +86,7 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
       })
       return todoList;
     }
+
     const roadAllSchedule = () => {
         const ym = pageTarget.getFullYear().toString() + pageTarget.getMonth().toString();
         const lastDate = new Date(pageTarget.getFullYear(), pageTarget.getMonth() + 1, 0).getDate();
@@ -112,37 +97,28 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
         setMiniTodoList(todoListOfMon);
     }
 
-    const changeDate = useCallback((target:Date)=>{
-        console.log("|Calendar| change Date");
-        setPageTarget(target);
-    },[]);
-
-    //네비게이션의 버튼이 targetDate를 변경시킴
-    useImperativeHandle(ref, () => ({changeDate}), [
-        changeDate,
-    ]); 
-
     const recentCal:DayData[][] = 
         new Array(6).fill([]).map(() => 
             new Array(7).fill({}).map(() => ({
                     'date' : 0,
                     'thisM' : false,
+                    'select' : false,
                     'color' : 0,
                 }))
         );
 
     //해당 달의 달력을 생성
     const getRecentCal = () => { 
-        if (!pageTarget || !focusBlock){
+        if (!pageTarget){
             console.log("|Calendar| 날짜 불러오기 실패")
             return;
         }
         console.log("|Calendar| call getRecentCal");
-        console.log(focusBlock);
         const today = new Date();   //현재 시간을 받아옴
         const todayDate = today.getDate();
         const thisYear = pageTarget.getFullYear();
         const thisMonth = pageTarget.getMonth();
+        const targetDay = pageTarget.getDate();
         
         const preMonLastDate = new Date(thisYear, thisMonth, 0).getDate();    //작년으로 넘어가도 문제 없음
         const firstDay = new Date(thisYear, thisMonth, 1);
@@ -161,10 +137,11 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
                         if(today.getMonth() == thisMonth && today.getFullYear() == thisYear){
                             toDayBlock['row'] = row;
                             toDayBlock['col'] = col;
-                        }else {
-                            toDayBlock['row'] = -1;
-                            toDayBlock['col'] = -1;
                         }
+                    }
+                    if (day === targetDay) {
+                        console.log(value);
+                        value.select = true;
                     }
                     value.date = day;
                     value.thisM = true;
@@ -182,42 +159,36 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusLin
     
     getRecentCal();
 
-    const blockStyle = (test:number, test2:number) => {
-        if(test==focusBlock?.row && test2==focusBlock?.col)
+    const blockStyle = (select:boolean, test:number, test2:number) => {
+        if (select) {
+            console.log(select);
             return {borderColor: 'red'} 
-        else if(test==toDayBlock['row'] && test2 == toDayBlock['col'])
+        }else if(test==toDayBlock['row'] && test2 == toDayBlock['col']) {
+            console.log(select);
             return {borderColor: 'blue'}
-        else 
+        }else 
             return {}
     }
 
-//      <View style={styles.miniToDoViewRow}>
-//          {value.thisM?(miniTodoList[value.date-1]?.map((data)=>{
-//          console.log(value.date);
-//          console.log(data);
-//          return(
-//          <View style={styles.miniToDoView}>
-//             <View style={{...styles.miniToDo,
-//                 backgroundColor:data.complete?"blue":theme.background}}/>
-//          </View>)
-//          })):null}
-//      </View>
 const onPressDate = useCallback((value:DayData, idx:number, idx2:number)=>{
     console.log("Focus" + value.date);
     if(value.thisM) {
-        setFocusBlock({
-            row:idx,
-            col:idx2
-        });
         setFocusDay(
             new Date(
                 pageTarget.getFullYear(), 
                 pageTarget.getMonth(), 
                 recentCal[idx][idx2].date
-                )
-            )
-        setFocusLine(idx, true);
+                ), idx, true)
     }},[])
+
+const renderMiniToDo = (today:number) => {
+    miniTodoList[today].length  //3, 6, 9 보다 클때를 구분
+    return(
+    <View>
+
+    </View>
+    )
+}
 
     return (
         <View style={styles.test}>
@@ -225,11 +196,12 @@ const onPressDate = useCallback((value:DayData, idx:number, idx2:number)=>{
                 <View key={index} style={styles.row}>  
                     {array.map((value, index2) => (
                         <TouchableOpacity key={index2} onPress={()=>onPressDate(value,index,index2)}
-                         style={[styles.rowItem, blockStyle(index, index2)]}>
+                         style={[styles.rowItem, blockStyle(value.select, index, index2)]}>
                                 <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
                                     {value.date}
                                 </Text>
-                                {value.thisM?(<FlatList
+                                {value.thisM?(
+                                <FlatList
                                 data={miniTodoList[value.date-1]}
                                 style={styles.miniToDoViewRow}
                                 numColumns={3}
@@ -239,8 +211,7 @@ const onPressDate = useCallback((value:DayData, idx:number, idx2:number)=>{
                                         <View style={{...styles.miniToDo,
                                             backgroundColor:item.complete?"blue":theme.background}}/>
                                     </View>)}
-                                }>
-                                </FlatList>):null}
+                                }/>):null}
                         </TouchableOpacity>
                     ))}
                 </View>

@@ -12,7 +12,7 @@ import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
 import signAlert from './util/Tools';
 import { theme } from './util/color';
-import ToDoComponent from './ToDoListComponent';
+import ToDoComponent, { ToDoListComponentRefProps } from './ToDoListComponent';
 
 const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
 
@@ -77,21 +77,26 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     }
   };
 
-
+  //=======================================
+  // ToDo, Calendar, BottomSheet 연동 관련
+  //=======================================
   const refBS = useRef<BottomSheetRefProps>(null);
-  const onPress = useCallback(() => {   //버튼을 누르면
-    const isActive = refBS?.current?.isActive();
-    if (isActive) { //만일 액티브가 활성화 되어있으면
-      refBS?.current?.scrollTo(0);   // 스크롤을 0으로 내려 없앤다. 그럼 scrollTo에서 0이 되면서 active를 비활성화 한다.
-    }else {  // 비활성화 되어있으면
-      refBS?.current?.scrollTo(MAX_TRANSLATE_Y); // 스크롤을 -200으로 그럼 scrollTo에서 0이 아니여서 active를 활성화 한다.
-    }
-  }, []);
 
-
-  const onFocusLine = (target:number, activeBottom:boolean) => {
+  const initFocusBlock = useMemo(() => {
+    // 첫날 계산.
+    const firstDate = new Date(focusDate.getFullYear(), focusDate.getMonth(), 1)
+    const temp = firstDate.getDay()+focusDate.getDate()-1; //getDate는 시작이 1이기에 1을 빼줌.
+    console.log("|HomeScreen| init : " + temp);
+    var row:number;
+    row = Math.floor(temp/7)
     console.log("|Home| onFocusLine")
-    setFocusLine(target);
+    setFocusLine(row)
+  },[]);
+
+  const onFocusDate = (target:Date, line:number, activeBottom:boolean) => {
+    console.log("|Home| onFocusDate")
+    setFocusDate(target);
+    setFocusLine(line);
 
     const isActive = refBS?.current?.isActive();
     if(!activeBottom && isActive) {
@@ -103,27 +108,22 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     }
   }
 
-  const onFocusDate = (target:Date) => {
-    console.log("|Home| onFocusDate")
-    // const ymd:YMD = {
-    //   year:target.getFullYear(),
-    //   month:target.getMonth(),
-    //   day:target.getDate()
-    // }
-    setFocusDate(target);
-  }
+  const refToDo = useRef<ToDoListComponentRefProps>(null);
 
   const loadToDoList = useCallback(()=>{
     console.log("called loadTodoList");
     console.log(loginData);
     if (loginData !== undefined) 
-      refBS?.current?.loadToDoList(loginData['token']);
+      refToDo?.current?.loadToDos(loginData['token']);
   },[loginData])
 
   const refCal = useRef<CalendarRefProps>(null);
   let page = 0;
   const today = new Date();
 
+  //==================================
+  // Navigator 관련 (BottomSheet요소, HomeScreen요소 사용)
+  //==================================
   const toStringYM = (day:Date) => 
     day.getFullYear().toString() + "." + (day.getMonth()+1).toString();
     
@@ -134,7 +134,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     const targetday = new Date(today.getFullYear(), today.getMonth()+page, 1);
     setFocusDate(targetday);
     setTargetYM(toStringYM(targetday));
-    refCal?.current?.changeDate(targetday);
   },[]);
 
   const onPressPre = useCallback(()=> {
@@ -142,7 +141,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     const targetday = new Date(today.getFullYear(), today.getMonth()+page+1, 0);
     setFocusDate(targetday);
     setTargetYM(toStringYM(targetday));
-    refCal?.current?.changeDate(targetday);
   },[]);
   
   const rightButton = () => {
@@ -156,7 +154,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
               setLogin(false);
               removeLoginData();
             }} title="Logout"/>
-            <Button onPress={()=> onPress()} title="UP"/>
         </View>);
     }
     return(
@@ -167,7 +164,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         <Button onPress={()=> {
           navigation.push("Login");
         }} title="Login"/>
-        <Button onPress={()=> onPress()} title="UP"/>
       </View>
     )
   }
@@ -199,8 +195,8 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   }, [navigation, login, targetYM]);
 
   
-  const data = useMemo(()=>[1,2,3,4,5],[]);
   /* 캘린더 슬라이드
+    const data = useMemo(()=>[1,2,3,4,5],[]);
           <FlatList
             data={data}
             renderItem={(({item})=> (
@@ -221,9 +217,9 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     <GestureHandlerRootView style={{flex:1}}>
       <View style={styles.container}>  
         <StatusBar style="light" />
-        <BottomSheet focusLine={focusLine} focusDate={focusDate} ref={refBS}>
-          <Calendar setFocusLine={onFocusLine} setFocusDay={onFocusDate} ref={refCal}/>
-          <View/>
+        <BottomSheet focusLine={focusLine} ref={refBS}>
+          <Calendar setFocusDay={onFocusDate} pageTarget={focusDate} ref={refCal}/>
+          <ToDoComponent selectDate={focusDate} ref={refToDo}/>
         </BottomSheet>
       </View>
       <View style={styles.add_button_view}>

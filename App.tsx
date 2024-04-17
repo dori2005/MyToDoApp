@@ -5,11 +5,13 @@ import LoginScreen from './components/LoginScreen';
 import { NavigationContainer } from '@react-navigation/native'
 import React from 'react'
 import { createStackNavigator } from '@react-navigation/stack'
+import AddScreen from './components/AddScreen';
 
 export type RootStackParamList = {
   Test: undefined;
   Home: undefined;
   Login: undefined;
+  Add: undefined;
   Profile: { userId: string };
   Feed: { sort: 'latest' | 'top' } | undefined;
 };
@@ -41,6 +43,10 @@ export default function App() {
         <Stack.Screen 
           name='Login' 
           component={LoginScreen}
+        />
+        <Stack.Screen 
+          name='Add' 
+          component={AddScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>

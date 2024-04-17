@@ -29,26 +29,26 @@ interface MiniTodo {
 const dayPalette = ['gray', 'white', 'red', 'blue'];
 var realm:Realm;
 
+export interface YM {
+    year:number,
+    month:number
+}
+
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 type CalendarProps = {
     setFocusDay: (target:Date, line:number, activeBottom:boolean) => void,
-    pageTarget: Date
+    pageTarget: Date,
+    targetYM : String,
 }
 
-export interface YMD {
-    year:number,
-    month:number,
-    day:number
-}
 
 export interface CalendarRefProps {
-    changeDate: (target:Date) => void; //target으로 렌더링될 날짜 변경
 }
 
 //
 // Calendar 컴포넌트 정의
 //
-const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay, pageTarget}, ref) => {
+const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay, pageTarget, targetYM}, ref) => {
 
     // targetMonth에는 목표 달의 1일 혹은 마지막일로 설정된다.
     const [miniTodoList, setMiniTodoList] = useState<MiniTodo[][]>(new Array(31).fill([]));
@@ -63,7 +63,7 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
         return () => {
           realm?.close();
         };
-    },[pageTarget])
+    },[targetYM])   // 날짜 선택시마다 DB 로드 방지
 
     const openLocalDB = async () => {
         try {
@@ -97,6 +97,12 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
         setMiniTodoList(todoListOfMon);
     }
 
+    //월 변경시 이전 schedule 잔상 남는거 제거
+    const resetAllSchedule = useMemo(() => {
+        const todoListOfMon:MiniTodo[][] = new Array(31).fill([]);
+        setMiniTodoList(todoListOfMon);
+    },[targetYM]);
+
     const recentCal:DayData[][] = 
         new Array(6).fill([]).map(() => 
             new Array(7).fill({}).map(() => ({
@@ -108,7 +114,7 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
         );
 
     //해당 달의 달력을 생성
-    const getRecentCal = () => { 
+    const getRecentCal = useCallback(() => { 
         if (!pageTarget){
             console.log("|Calendar| 날짜 불러오기 실패")
             return;
@@ -155,7 +161,7 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                     value.date = nextMCount++;
             })
         })
-    }
+    }, [pageTarget, toDayBlock]) // pageTarget만 했을때는 안됐는데, 왜 toDayBlock 추가하니까 되는거니?
     
     getRecentCal();
 
@@ -170,52 +176,57 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
             return {}
     }
 
-const onPressDate = useCallback((value:DayData, idx:number, idx2:number)=>{
-    console.log("Focus" + value.date);
-    if(value.thisM) {
-        setFocusDay(
-            new Date(
-                pageTarget.getFullYear(), 
-                pageTarget.getMonth(), 
-                recentCal[idx][idx2].date
-                ), idx, true)
-    }},[])
+    const onPressDate = useCallback((value:DayData, idx:number, idx2:number)=>{
+        console.log("Focus" + value.date);
+        console.log(pageTarget)
+        if(value.thisM) {
+            setFocusDay(
+                new Date(
+                    pageTarget.getFullYear(), 
+                    pageTarget.getMonth(), 
+                    value.date
+                    ), idx, true)
+    }},[pageTarget]) //**depth에 pageTarget을 설정안하면, 해당 함수 내에서 pageTarget은 초기값으로 고정된다.
+    //useCallback으로 감싸주면 react가 함수를 저장하고 
+    //두 번째 매개변수인 dependencies가 변경되지 않는다면 함수를 재생성하지 않기 때문에
+    //해당 함수를 props로 가지는 자식 컴포넌트들은 함수가 바뀌었다고 생각하지 않게 된다
 
-const renderMiniToDo = (today:number) => {
-    const len = Math.floor(miniTodoList[today].length/3)  //3, 6, 9 보다 클때를 구분
-    const sub_len = miniTodoList[today].length%3;
-    const subArray:MiniTodo[][] = new Array(len+1).fill([]);
+    const renderMiniToDo = (today:number) => {
+        const len = Math.floor(miniTodoList[today].length/3)  //3, 6, 9 보다 클때를 구분
+        const sub_len = miniTodoList[today].length%3;
+        const subArray:MiniTodo[][] = new Array(len+1).fill([]);
 
-    let i = 0;
-    for(; i < len; i++) {
-        subArray[i] = miniTodoList[today].slice(i*3, i*3+3);
+        let i = 0;
+        for(; i < len; i++) {
+            subArray[i] = miniTodoList[today].slice(i*3, i*3+3);
+        }
+        if (sub_len != 0)
+            subArray[i] = miniTodoList[today].slice(i*3, i*3+sub_len);
+
+        return(
+            <View style={styles.miniToDoBlock}>
+                {subArray.map((rows, idx1)=>(
+                    <View key={idx1} style={styles.miniToDoRow}>
+                        {rows.map((item, idx2)=>{
+                            return(<View key={idx2} style={styles.miniToDoView}>
+                                <View style={{...styles.miniToDo,
+                                    backgroundColor:item.complete?"blue":theme.background}}/>
+                            </View>
+                        )})}
+                    </View>
+                ))}
+            </View>
+        )
     }
-    if (sub_len != 0)
-        subArray[i] = miniTodoList[today].slice(i*3, i*3+sub_len);
 
-    return(
-        <View style={styles.miniToDoBlock}>
-            {subArray.map((rows)=>(
-                <View style={styles.miniToDoRow}>
-                    {rows.map((item)=>{
-                        return(<View style={styles.miniToDoView}>
-                            <View style={{...styles.miniToDo,
-                                backgroundColor:item.complete?"blue":theme.background}}/>
-                        </View>
-                    )})}
-                </View>
-            ))}
-        </View>
-    )
-}
-
+    //컴포넌트 렌더링
     return (
         <View style={styles.test}>
-            {recentCal.map((array, index) => ( // 가로줄, 행을 생성
-                <View key={index} style={styles.row}>  
-                    {array.map((value, index2) => (
-                        <TouchableOpacity key={index2} onPress={()=>onPressDate(value,index,index2)}
-                         style={[styles.rowItem, blockStyle(value.select, index, index2)]}>
+            {recentCal.map((array, idx1) => ( // 가로줄, 행을 생성
+                <View key={idx1} style={styles.row}>  
+                    {array.map((value, idx2) => (
+                        <TouchableOpacity key={idx2} onPress={()=>onPressDate(value,idx1,idx2)}
+                         style={[styles.rowItem, blockStyle(value.select, idx1, idx2)]}>
                                 <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
                                     {value.date}
                                 </Text>

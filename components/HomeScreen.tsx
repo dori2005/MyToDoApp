@@ -95,6 +95,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
 
   const onFocusDate = (target:Date, line:number, activeBottom:boolean) => {
     console.log("|Home| onFocusDate")
+    console.log(target);
     setFocusDate(target);
     setFocusLine(line);
 
@@ -194,6 +195,10 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     navigation.setOptions({headerRight: rightButton});
   }, [navigation, login, targetYM]);
 
+  const onPressAdd = useCallback(() => {
+    navigation.push("Add");
+  },[]);
+
   
   /* 캘린더 슬라이드
     const data = useMemo(()=>[1,2,3,4,5],[]);
@@ -218,12 +223,12 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
       <View style={styles.container}>  
         <StatusBar style="light" />
         <BottomSheet focusLine={focusLine} ref={refBS}>
-          <Calendar setFocusDay={onFocusDate} pageTarget={focusDate} ref={refCal}/>
+          <Calendar setFocusDay={onFocusDate} targetYM={targetYM} pageTarget={focusDate} ref={refCal}/>
           <ToDoComponent selectDate={focusDate} ref={refToDo}/>
         </BottomSheet>
       </View>
       <View style={styles.add_button_view}>
-        <TouchableOpacity style={styles.add_todo_button} onPress={()=>{}}>
+        <TouchableOpacity style={styles.add_todo_button} onPress={()=>onPressAdd()}>
           <View>
             <View style={styles.crossVertical} />
             <View style={styles.crossHorizon} />

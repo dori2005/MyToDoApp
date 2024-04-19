@@ -1,7 +1,7 @@
 import { Dimensions, LayoutChangeEvent, NativeUIEvent, StyleSheet, Text, View } from 'react-native'
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react'
-import {bodyDatas, heads, property} from '../resources/test'
+import {bodyDatas, heads, property} from './resources/test'
 
 import Realm from 'realm';
 import { Schedule } from './Object/Schedule';

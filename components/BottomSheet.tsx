@@ -3,7 +3,7 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useCallback, useEffect, useImperativeHandle, useRef } from 'react'
 import ToDoListComponent, { ToDoListComponentRefProps } from './ToDoListComponent'
-import {focus, focus2, heads, property} from '../resources/test'
+import {focus, focus2, heads, property} from './resources/test'
 
 import Calendar from './Calendar'
 import { theme } from './util/color'

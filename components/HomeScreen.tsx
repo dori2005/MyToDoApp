@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../App';
+import SideBarComponent from './SideBarComponent';
 import { StatusBar } from 'expo-status-bar';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
@@ -196,6 +197,11 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         <TouchableOpacity onPress={()=> onPressPre()}>
           <Text style={{...styles.headerButton, textAlign:'right'}}>◀</Text>
         </TouchableOpacity>
+        <Button 
+          title='Drawer 열기'
+          onPress={()=> {
+            navigation.push("SideBar");
+            }} />
       </View>
     )});
     navigation.setOptions({headerRight: rightButton});
@@ -204,25 +210,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   const onPressAdd = useCallback(() => {
     navigation.push("Add");
   },[]);
-
-  
-  /* 캘린더 슬라이드
-    const data = useMemo(()=>[1,2,3,4,5],[]);
-          <FlatList
-            data={data}
-            renderItem={(({item})=> (
-              <Calendar setFocusLine={onFocusLine} targetDay={item} ref={refCal}/>
-            ))}
-            horizontal
-            pagingEnabled
-            />
-  */
- /* 마법봉
-        <TouchableOpacity onPress={()=>{}}>
-          <Image style={styles.magic_wand_button}
-            source={require('../assets/magic-wand.png')}/>
-        </TouchableOpacity>
-   */
 
   return (
     <GestureHandlerRootView style={{flex:1}}>

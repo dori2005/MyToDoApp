@@ -3,6 +3,7 @@ import { Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native'
 import Calendar, { CalendarRefProps } from './Calendar';
 import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StackScreenProps, createStackNavigator } from '@react-navigation/stack';
+import ToDoComponent, { ToDoListComponentRefProps } from './ToDoListComponent';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,7 +13,6 @@ import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
 import signAlert from './util/Tools';
 import { theme } from './util/color';
-import ToDoComponent, { ToDoListComponentRefProps } from './ToDoListComponent';
 
 const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
 
@@ -94,7 +94,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   },[]);
 
   const onFocusDate = (target:Date, line:number, activeBottom:boolean) => {
-    console.log("|Home| onFocusDate")
+    console.log("|Home| onFocusDate, target =>")
     console.log(target);
     setFocusDate(target);
     setFocusLine(line);
@@ -112,13 +112,19 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   const refToDo = useRef<ToDoListComponentRefProps>(null);
 
   const loadToDoList = useCallback(()=>{
-    console.log("called loadTodoList");
-    console.log(loginData);
+    console.log("|HomeScreen| called loadTodoList");
     if (loginData !== undefined) 
       refToDo?.current?.loadToDos(loginData['token']);
   },[loginData])
 
   const refCal = useRef<CalendarRefProps>(null);
+  const onUpdateTodo = (id:string, date:Date, fix:number) => {
+    const ym = toStringYM(date);
+    const day = date.getDate();
+    console.log("|Home| onUpdateTodo" + day);
+    refCal?.current?.onUpdateToDo(id, ym, day, fix);
+  }
+  
   let page = 0;
   const today = new Date();
 
@@ -224,7 +230,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         <StatusBar style="light" />
         <BottomSheet focusLine={focusLine} ref={refBS}>
           <Calendar setFocusDay={onFocusDate} targetYM={targetYM} pageTarget={focusDate} ref={refCal}/>
-          <ToDoComponent selectDate={focusDate} ref={refToDo}/>
+          <ToDoComponent selectDate={focusDate} onUpdateToDo={onUpdateTodo} ref={refToDo}/>
         </BottomSheet>
       </View>
       <View style={styles.add_button_view}>

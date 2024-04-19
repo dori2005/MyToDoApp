@@ -9,16 +9,16 @@ import {
     View
 } from 'react-native';
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { Schedule, ScheduleData } from './Object/Schedule';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FontAwesome } from '@expo/vector-icons';
-import { StatusBar } from 'expo-status-bar';
-import { theme } from './util/color';
 import Realm from 'realm';
+import { StatusBar } from 'expo-status-bar';
 import { ToDo } from './Object/ToDo';
+import { YM } from './Calendar';
+import { theme } from './util/color';
 import {useQuery} from '@realm/react';
-import { Schedule, ScheduleData } from './Object/Schedule';
-
 
 const server = require('./util/saveTodo');
 
@@ -40,6 +40,7 @@ interface TodoList {
 }
 interface ToDoListComponentProps {
   selectDate:Date,
+  onUpdateToDo: (id:string, date:Date, fix:number) => void;
 }
 
 export interface ToDoListComponentRefProps {
@@ -49,7 +50,7 @@ export interface ToDoListComponentRefProps {
 
 var realm:Realm;
 
-const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListComponentProps>(({selectDate},ref) => {
+const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListComponentProps>(({selectDate, onUpdateToDo},ref) => {
     const [working, setWorking] = useState(true);
     const [editing, setEditing] = useState("");
     const [text, setText] = useState("");
@@ -192,6 +193,7 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
       //createTodo(key, data);
       await server.renewUpdate(0, time, data);
       setText("");
+      onUpdateToDo(time, selectDate, 0);
     }
   
     const deleteAction = async(key:string) => {
@@ -202,6 +204,8 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
         realmDeleteSchedule(key);
         console.log("delete ToDo2");
         server.renewUpdate(2, key);
+        
+        onUpdateToDo(key, selectDate, 1);
       }
       
     const deleteToDo = (key:string) => {
@@ -235,10 +239,12 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
         newToDos[key].complete = true;
   
       setToDos(newToDos);
+      onUpdateToDo(key, selectDate, 2);
       await server.renewUpdate(1, key, { 
           text: toDos[key].text, 
           complete: toDos[key].complete
         });
+        
     }
   
     const editToDo = async (key:string) => {

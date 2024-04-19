@@ -1,14 +1,13 @@
 import { Dimensions, LayoutChangeEvent, NativeUIEvent, StyleSheet, Text, View } from 'react-native'
+import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import {bodyDatas, heads, property} from '../resources/test'
 
-import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
-import { useSharedValue } from 'react-native-reanimated'
-import { theme } from './util/color';
-import { ToDo } from './Object/ToDo';
-import { Schedule } from './Object/Schedule';
-
 import Realm from 'realm';
+import { Schedule } from './Object/Schedule';
+import { ToDo } from './Object/ToDo';
+import { theme } from './util/color';
+import { useSharedValue } from 'react-native-reanimated'
 
 interface DayData {
     date:number,
@@ -43,6 +42,7 @@ type CalendarProps = {
 
 
 export interface CalendarRefProps {
+    onUpdateToDo: (id:string, ym:string, day:number, fix:number) => void;
 }
 
 //
@@ -52,6 +52,8 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
 
     // targetMonth에는 목표 달의 1일 혹은 마지막일로 설정된다.
     const [miniTodoList, setMiniTodoList] = useState<MiniTodo[][]>(new Array(31).fill([]));
+    const [,updateState] = useState({});
+    const forceUpdate = useCallback(()=>updateState({}),[]);
     const toDayBlock:Position = {
         col:-1,
         row:-1
@@ -64,6 +66,34 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
           realm?.close();
         };
     },[targetYM])   // 날짜 선택시마다 DB 로드 방지
+    
+    const onUpdateToDo = (id:string, ym:string, day:number, fix:number) => {
+        const updateList:MiniTodo[] = [];
+        if(ym != targetYM)
+            return;
+        if (fix == 0) {
+            miniTodoList[day-1].push({ "id":id, "color":0, "complete": false })
+            forceUpdate()
+            return;
+        }
+        for(let i = 0; i < miniTodoList[day-1].length; i++) {
+            if(miniTodoList[day-1][i].id == id) {
+                if (fix == 1) {
+                    continue;
+                }else if (fix == 2) {
+                    updateList.push({ "id":id, "color":miniTodoList[day-1][i].color, "complete": !miniTodoList[day-1][i].complete })
+                }
+            }
+            else 
+                updateList.push(miniTodoList[day-1][i])
+        }
+        miniTodoList[day-1] = updateList;
+        forceUpdate()
+    }
+
+    useImperativeHandle(ref, () => ({onUpdateToDo}), [
+        onUpdateToDo,
+      ]); 
 
     const openLocalDB = async () => {
         try {
@@ -146,7 +176,6 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                         }
                     }
                     if (day === targetDay) {
-                        console.log(value);
                         value.select = true;
                     }
                     value.date = day;
@@ -167,17 +196,17 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
 
     const blockStyle = (select:boolean, test:number, test2:number) => {
         if (select) {
-            console.log(select);
+            console.log("|Calendar| BlockStyle : red");
             return {borderColor: 'red'} 
         }else if(test==toDayBlock['row'] && test2 == toDayBlock['col']) {
-            console.log(select);
+            console.log("|Calendar| BlockStyle : blue");
             return {borderColor: 'blue'}
         }else 
             return {}
     }
 
     const onPressDate = useCallback((value:DayData, idx:number, idx2:number)=>{
-        console.log("Focus" + value.date);
+        console.log("|Calendar| Focus" + value.date);
         console.log(pageTarget)
         if(value.thisM) {
             setFocusDay(
@@ -191,17 +220,18 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
     //두 번째 매개변수인 dependencies가 변경되지 않는다면 함수를 재생성하지 않기 때문에
     //해당 함수를 props로 가지는 자식 컴포넌트들은 함수가 바뀌었다고 생각하지 않게 된다
 
-    const renderMiniToDo = (today:number) => {
-        const len = Math.floor(miniTodoList[today].length/3)  //3, 6, 9 보다 클때를 구분
-        const sub_len = miniTodoList[today].length%3;
+    const renderMiniToDo = (today:number) => {  //today = 날짜 - 1
+        const todayidx = today-1;
+        const len = Math.floor(miniTodoList[todayidx].length/3)  //3, 6, 9 보다 클때를 구분
+        const sub_len = miniTodoList[todayidx].length%3;
         const subArray:MiniTodo[][] = new Array(len+1).fill([]);
 
         let i = 0;
         for(; i < len; i++) {
-            subArray[i] = miniTodoList[today].slice(i*3, i*3+3);
+            subArray[i] = miniTodoList[todayidx].slice(i*3, i*3+3);
         }
         if (sub_len != 0)
-            subArray[i] = miniTodoList[today].slice(i*3, i*3+sub_len);
+            subArray[i] = miniTodoList[todayidx].slice(i*3, i*3+sub_len);
 
         return(
             <View style={styles.miniToDoBlock}>
@@ -230,7 +260,7 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                                 <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
                                     {value.date}
                                 </Text>
-                                {value.thisM?(renderMiniToDo(value.date-1)):null}
+                                {value.thisM?(renderMiniToDo(value.date)):null}
                         </TouchableOpacity>
                     ))}
                 </View>

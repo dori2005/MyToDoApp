@@ -14,14 +14,14 @@ const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 //상단 여백 1/10, 하단여백 9/100, 캘린더 칸당 81/100 * 1/6 = 27/200
 //상단 여백 + 캘린더 한칸 = 27/200 + 1/10 = 47/200
 //-(1 - 47/200) = -153/200
-const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*153/200  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
+export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*153/200  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
 
-type BottomSheetProps = {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
+interface BottomSheetProps {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
     children?: React.ReactNode[],
     focusLine: number
 }
 
-export type BottomSheetRefProps = {    //TS에서 메소드를 export하기위한 type 선언 같이 보임. 
+export interface BottomSheetRefProps {    //TS에서 메소드를 export하기위한 type 선언 같이 보임. 
     scrollTo: (destination: number) => void,
     isActive: () => boolean
 }   //이후 useImperativeHandle로 input과 output을 조립하는듯 하다.
@@ -112,6 +112,7 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({ch
                             {children[0]}
                         </Animated.View>
                     </View>
+                    {children[2]? (children[2]):null}
                     {children[1]}
                     <View style={styles.line}/>
                 </Animated.View>

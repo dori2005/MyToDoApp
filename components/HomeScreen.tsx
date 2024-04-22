@@ -14,6 +14,7 @@ import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
 import signAlert from './util/Tools';
 import { theme } from './util/color';
+import AddToDoComponent from './AddToDoComponent';
 
 const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
 
@@ -32,11 +33,13 @@ export interface YMD {
   day:number
 }
 
+var wasActive:boolean|undefined = false;
 const HomeScreen = ({navigation} : HomeScreenProps) => {
   const [loginData, setLoginData] = useState<LOGIN_DATA>();
   const [login, setLogin] = useState(false);
   const [focusLine, setFocusLine] = useState(0);
   const [focusDate, setFocusDate] = useState<Date>(new Date());
+  const [addAction, setAddAction] = useState(false);
 
   const loadLoginData = async () => {
     try {
@@ -94,20 +97,25 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     setFocusLine(row)
   },[]);
 
-  const onFocusDate = (target:Date, line:number, activeBottom:boolean) => {
+  //needBottom은 BottomSheet 활성화가 필요한지 나타낸다.
+  const onBottomSheet = (needBottom:boolean) => {
+    const isActive = refBS?.current?.isActive();
+    wasActive=isActive;
+    if(!needBottom && isActive) { 
+      refBS?.current?.scrollTo(0)
+      return;
+    }
+    if(needBottom && !isActive) {
+      refBS?.current?.scrollTo(MAX_TRANSLATE_Y)
+    }
+  }
+
+  const onFocusDate = (target:Date, line:number, needBottom:boolean) => {
     console.log("|Home| onFocusDate, target =>")
     console.log(target);
     setFocusDate(target);
     setFocusLine(line);
-
-    const isActive = refBS?.current?.isActive();
-    if(!activeBottom && isActive) {
-      refBS?.current?.scrollTo(0)
-      return;
-    }
-    if(activeBottom && !isActive) {
-      refBS?.current?.scrollTo(MAX_TRANSLATE_Y)
-    }
+    onBottomSheet(needBottom);
   }
 
   const refToDo = useRef<ToDoListComponentRefProps>(null);
@@ -207,9 +215,27 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     navigation.setOptions({headerRight: rightButton});
   }, [navigation, login, targetYM]);
 
-  const onPressAdd = useCallback(() => {
-    navigation.push("Add");
-  },[]);
+  const swichAddAction = (canceled:boolean) => {
+    setAddAction(!addAction);
+    if(wasActive || !canceled){
+      onBottomSheet(true); //canceled시(true) bottomsheet 불필요(false)
+    }else 
+      onBottomSheet(false); 
+  };
+  const addButton = () => {
+    if(addAction)
+      return(null);
+    return (
+      <View style={styles.add_button_view}>
+        <TouchableOpacity style={styles.add_todo_button} onPress={()=>swichAddAction(false)}>
+          <View>
+            <View style={styles.crossVertical} />
+            <View style={styles.crossHorizon} />
+          </View>
+        </TouchableOpacity>
+      </View>
+      )
+  }
 
   return (
     <GestureHandlerRootView style={{flex:1}}>
@@ -218,16 +244,12 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         <BottomSheet focusLine={focusLine} ref={refBS}>
           <Calendar setFocusDay={onFocusDate} targetYM={targetYM} pageTarget={focusDate} ref={refCal}/>
           <ToDoComponent selectDate={focusDate} onUpdateToDo={onUpdateTodo} ref={refToDo}/>
+          {addAction?(
+            <AddToDoComponent selectDate={focusDate} swichAddAction={swichAddAction} ref={null}/>
+          ):null}
         </BottomSheet>
       </View>
-      <View style={styles.add_button_view}>
-        <TouchableOpacity style={styles.add_todo_button} onPress={()=>onPressAdd()}>
-          <View>
-            <View style={styles.crossVertical} />
-            <View style={styles.crossHorizon} />
-          </View>
-        </TouchableOpacity>
-      </View>
+      {addButton()}
     </GestureHandlerRootView>
   );
 }

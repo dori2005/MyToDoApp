@@ -35,7 +35,7 @@ export interface YM {
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 type CalendarProps = {
-    setFocusDay: (target:Date, line:number, activeBottom:boolean) => void,
+    setFocusDay: (target:Date, line:number, needBottom:boolean) => void,
     pageTarget: Date,
     targetYM : String,
 }
@@ -48,24 +48,18 @@ export interface CalendarRefProps {
 //
 // Calendar 컴포넌트 정의
 //
+let todayBlock:Position = {
+    row:-1,
+    col:-1
+};
+
 const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay, pageTarget, targetYM}, ref) => {
 
     // targetMonth에는 목표 달의 1일 혹은 마지막일로 설정된다.
     const [miniTodoList, setMiniTodoList] = useState<MiniTodo[][]>(new Array(31).fill([]));
     const [,updateState] = useState({});
     const forceUpdate = useCallback(()=>updateState({}),[]);
-    const toDayBlock:Position = {
-        col:-1,
-        row:-1
-    }
-
-    useEffect(()=>{
-        openLocalDB();
-
-        return () => {
-          realm?.close();
-        };
-    },[targetYM])   // 날짜 선택시마다 DB 로드 방지
+    const today = new Date();   //현재 시간을 받아옴
     
     const onUpdateToDo = (id:string, ym:string, day:number, fix:number) => {
         const updateList:MiniTodo[] = [];
@@ -133,7 +127,16 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
         setMiniTodoList(todoListOfMon);
     },[targetYM]);
 
-    const recentCal:DayData[][] = 
+    const [recentCal, setRecentCal] = useState<DayData[][]>();
+
+    //해당 달의 달력을 생성
+    const getRecentCal = useCallback(() => { 
+        if (!pageTarget){
+            console.log("|Calendar| 날짜 불러오기 실패")
+            return;
+        }
+
+        const tempCal:DayData[][] = 
         new Array(6).fill([]).map(() => 
             new Array(7).fill({}).map(() => ({
                     'date' : 0,
@@ -142,16 +145,8 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                     'color' : 0,
                 }))
         );
-
-    //해당 달의 달력을 생성
-    const getRecentCal = useCallback(() => { 
-        if (!pageTarget){
-            console.log("|Calendar| 날짜 불러오기 실패")
-            return;
-        }
+        
         console.log("|Calendar| call getRecentCal");
-        const today = new Date();   //현재 시간을 받아옴
-        const todayDate = today.getDate();
         const thisYear = pageTarget.getFullYear();
         const thisMonth = pageTarget.getMonth();
         const targetDay = pageTarget.getDate();
@@ -163,19 +158,30 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
         let day = -firstDay.getDay(); //sunday = 0, saturday = 6
         let nextMCount = 1;
 
-        recentCal.map((array,row)=> {
+        tempCal.map((array,row)=> {
             array.map((value:DayData,col)=> {
                 value.color = 0;
                 if ( day++ < 0 )
                     value.date = preMonLastDate + day;
                 else if( day <= lastDate ) {
-                    if(day === todayDate){
-                        if(today.getMonth() == thisMonth && today.getFullYear() == thisYear){
-                            toDayBlock['row'] = row;
-                            toDayBlock['col'] = col;
+                    if(day === today.getDate()) {
+                        if(today.getMonth() === thisMonth && today.getFullYear() === thisYear) {
+                            console.log("|GetRecentCal| toDay" + day);
+                            todayBlock = {
+                                "row":row,
+                                "col":col
+                            }
+                            console.log(todayBlock);
+                        } else {
+                            todayBlock = {
+                                "row":-1,
+                                "col":-1
+                            }
+                            console.log(todayBlock);
                         }
                     }
                     if (day === targetDay) {
+                        console.log("|GetRecentCal| targetDay" + day);
                         value.select = true;
                     }
                     value.date = day;
@@ -190,15 +196,27 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                     value.date = nextMCount++;
             })
         })
-    }, [pageTarget, toDayBlock]) // pageTarget만 했을때는 안됐는데, 왜 toDayBlock 추가하니까 되는거니?
+        setRecentCal(tempCal);
+    }, [pageTarget]) // pageTarget만 했을때는 안됐는데, 왜 toDayBlock 추가하니까 되는거지? 그리고 나는 왜 설마라고 생각했지?
     
-    getRecentCal();
+    useEffect(()=>{
+        getRecentCal();
+    },[pageTarget])
 
-    const blockStyle = (select:boolean, test:number, test2:number) => {
+    useEffect(()=>{
+        openLocalDB();
+
+        return () => {
+          realm?.close();
+        };
+    },[targetYM])   // 날짜 선택시마다 DB 로드 방지
+
+    const blockStyle = (select:boolean, idx1:number, idx2:number) => {
         if (select) {
             console.log("|Calendar| BlockStyle : red");
             return {borderColor: 'red'} 
-        }else if(test==toDayBlock['row'] && test2 == toDayBlock['col']) {
+        }
+        else if(todayBlock.row === idx1 && todayBlock.col === idx2){
             console.log("|Calendar| BlockStyle : blue");
             return {borderColor: 'blue'}
         }else 
@@ -252,11 +270,11 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
     //컴포넌트 렌더링
     return (
         <View style={styles.test}>
-            {recentCal.map((array, idx1) => ( // 가로줄, 행을 생성
+            {recentCal?.map((array, idx1) => ( // 가로줄, 행을 생성
                 <View key={idx1} style={styles.row}>  
                     {array.map((value, idx2) => (
                         <TouchableOpacity key={idx2} onPress={()=>onPressDate(value,idx1,idx2)}
-                         style={[styles.rowItem, blockStyle(value.select, idx1, idx2)]}>
+                         style={[styles.rowItem, blockStyle(value.select,idx1,idx2)]}>
                                 <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
                                     {value.date}
                                 </Text>

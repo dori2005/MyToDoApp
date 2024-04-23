@@ -12,7 +12,7 @@ export type RootStackParamList = {
   Test: undefined;
   Home: undefined;
   Login: undefined;
-  Add: undefined;
+  Add: { selectDate: Date};
   SideBar: undefined;
   Profile: { userId: string };
   Feed: { sort: 'latest' | 'top' } | undefined;

@@ -1,6 +1,6 @@
 
 type TodoData = {
-    todo_text:string,
+    text:string,
     complete:boolean,
 };
 type LoadData = {
@@ -8,7 +8,7 @@ type LoadData = {
   user_id:string,
   time:string,
   group_id:string,
-  todo_text:string,
+  text:string,
   complete:number,
 };
 type TodoList = {
@@ -46,7 +46,7 @@ const updateStack:UpdateStack = {
     })
     .then((data) => {
       data.forEach((object:LoadData)=> {
-        todo[object["time"]] = { "todo_text":object["todo_text"], "complete":object["complete"]==0?false:true };
+        todo[object["time"]] = { "text":object["text"], "complete":object["complete"]==0?false:true };
       })
     })
     .catch((error) => {
@@ -127,29 +127,33 @@ const updateStack:UpdateStack = {
   };
   
   //todo key를 통해 최종적인 todo를 설정
-  const renewUpdate = (flag:number, key:string, data:TodoData) => {
+  const renewUpdate = (flag:number, key:string, data:TodoData|undefined=undefined) => {
     if (updateStack === undefined)
         return null;
     // 0 - todo 생성
     // 1 - todo 수정
     // 2 - todo 삭제
     let count = 0;
-    if(flag == 0) {
-      updateStack.create[key] = data;
-    }else if (flag == 1) {
-      if(updateStack.create[key]) 
+    if(data) {
+      if(flag == 0) {
         updateStack.create[key] = data;
-      else 
-        updateStack.update[key] = data;
-    }else if (flag == 2) {
-      if(updateStack.create[key]) {
-        delete updateStack.create[key];
-      }else {
-        updateStack.delete[key] = true;
+      }else if (flag == 1) {
+        if(updateStack.create[key]) 
+          updateStack.create[key] = data;
+        else 
+          updateStack.update[key] = data;
+      } 
+    }else {
+      if (flag == 2) {
+        if(updateStack.create[key]) {
+          delete updateStack.create[key];
+        }else {
+          updateStack.delete[key] = true;
+        }
+        if(updateStack.update[key]) {
+          delete updateStack.update[key];
+        }      
       }
-      if(updateStack.update[key]) {
-        delete updateStack.update[key];
-      }      
     }
     count += Object.keys(updateStack.create).length;
     count += Object.keys(updateStack.update).length;
@@ -175,7 +179,7 @@ const updateStack:UpdateStack = {
     console.log(updateStack);
   }
     
-  module.exports = {
+ export default {
     getToDos,
     renewUpdate,
     saveUpdate

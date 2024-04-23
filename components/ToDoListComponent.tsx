@@ -20,10 +20,11 @@ import { YM } from './Calendar';
 import { theme } from './util/color';
 import {useQuery} from '@realm/react';
 
-const server = require('./util/saveTodo');
+import server from './util/saveTodo';
 
 const STORAGE_KEY = "@toDos"
 const STORAGE_KEY_TAP = "@tabData"
+const dayKorean = ["일", "월", "화", "수", "목", "금", "토"]
 
 interface TodoData {
   text:string,
@@ -45,15 +46,14 @@ interface ToDoListComponentProps {
 
 export interface ToDoListComponentRefProps {
   loadToDos: (token:string) => void;
+  addToDo: (key:string, text:string) => boolean;
 }
 
 
 var realm:Realm;
 
 const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListComponentProps>(({selectDate, onUpdateToDo},ref) => {
-    const [working, setWorking] = useState(true);
     const [editing, setEditing] = useState("");
-    const [text, setText] = useState("");
     const [editText, setEditText] = useState("");
     const [toDos, setToDos] = useState<TodoList>();
 
@@ -102,28 +102,7 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
       setToDos(todo);
     }
 
-    const createTodo = (key:string, data:TodoData) => {
-      realm?.write(() => {
-        realm.create('Todo', {
-            id: key,
-            text: data.text,
-            complete: data.complete,
-        })
-      });
-    }
-
     const addToDoInList = () => {
-    }
-
-    const realmCreateSchedule = (key:string, data:ScheduleData) => {
-      realm?.write(() => {
-        realm.create('Schedule', {
-            id: key,
-            text: data.text,
-            date: data.date,
-            complete: data.complete,
-        })
-      });
     }
 
     const realmDeleteDB = () => {
@@ -147,17 +126,24 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
         realm.delete(del);
       });
     }
+    const updateSchedule = (key:string, data:TodoData) => {
+      realm?.write(() => {
+        realm.create('Schedule', {
+            id: key,
+            text: data.text,
+            complete: data.complete,
+        }, Realm.UpdateMode.Modified)
+      });
+    }
     const updateTodo = (key:string, data:TodoData) => {
       realm?.write(() => {
         realm.create('Todo', {
             id: key,
-            text: 'data.text',
-            complete: 'data.complete',
+            text: data.text,
+            complete: data.complete,
         }, Realm.UpdateMode.Modified)
       });
     }
-
-    const inputText = (payload:string) => setText(payload);
 
     const loadToDos = async (token:string) => {
       console.log("load ToDos");
@@ -168,33 +154,26 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
         console.log(e);
       }
     };
-
-    useImperativeHandle(ref, () => ({loadToDos}), [
-      loadToDos,
-    ]); 
   
-    const addToDo = async () => {
+    const addToDo = (key:string, text:string) => {
       if (text === "") {
-        return
+        return false;
       }
-      const time = Date.now().toString();
-      console.log("Key : "+time);
-      const select = selectDate.getFullYear().toString()+selectDate.getMonth().toString()+selectDate.getDate().toString()
-      console.log("select date : "+select);
       const newToDos = {
         ...toDos,
-        [time]: { text, complete: false },
+        [key]: { text, complete: false },
       };
-      const data = { text, complete: false };
-      const schedule_data = { text, date:select, complete: false, color: 0 };
   
       setToDos(newToDos);
-      realmCreateSchedule(time, schedule_data);
-      //createTodo(key, data);
-      await server.renewUpdate(0, time, data);
-      setText("");
-      onUpdateToDo(time, selectDate, 0);
+      onUpdateToDo(key, selectDate, 0);
+
+      return true;
     }
+
+    useImperativeHandle(ref, () => ({loadToDos, addToDo}), [
+      loadToDos,
+      addToDo
+    ]); 
   
     const deleteAction = async(key:string) => {
         const newToDos = { ...toDos };
@@ -239,6 +218,7 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
         newToDos[key].complete = true;
   
       setToDos(newToDos);
+      updateSchedule(key, toDos[key]);
       onUpdateToDo(key, selectDate, 2);
       await server.renewUpdate(1, key, { 
           text: toDos[key].text, 
@@ -281,7 +261,18 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
       }
       setEditing("");
     }
-  
+
+    //
+    // Todo 관련 => 모양 다르게는 추후에 생각해보자.
+    // 언젠가 할일 (Todo)
+
+    //
+    // schedule 관련 => 언젠가 할일보다는 앞순위로 출력
+    // 날짜를 선택하고, 이날 할일(Todo)로 설정하도록 한다.
+
+    //
+    // hobitㅡ=> 
+    // 습관 만들기 - 반복 방식 확인.(마지막 업데이트 날짜 확인). 마지막 업데이트 날짜부터 ~ 오늘로 부터 1달 (31일 뒤)까지 미리 ToDo 추가 생성
 
     const printTodo = () => {
       if(toDos === undefined)
@@ -328,19 +319,15 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
       ))
       )
     }
+
+    const printDate = () => selectDate.getDate().toString() + " ("+ dayKorean[selectDate.getDay()] +")";
   
     return (
       <View style={styles.container}>
         <StatusBar style="auto" />
         <View style={styles.header}>
+          <Text style={styles.input}>{printDate()}</Text>
         </View>
-        <TextInput
-          onSubmitEditing={addToDo}
-          onChangeText={inputText}
-          returnKeyType='done'
-          value={text}
-          placeholder={working ? "Add a To Do" : "Where do you want?"}
-          style={styles.input}></TextInput>
         <ScrollView>
           {printTodo()}
         </ScrollView>
@@ -366,12 +353,12 @@ export default ToDoComponent
       fontWeight: "600",
     },
     input: {
-      backgroundColor: "white",
       paddingVertical: 15,
-      paddingHorizontal: 20,
-      borderRadius: 30,
-      marginVertical: 20,
-      fontSize: 18,
+      paddingHorizontal: 13,
+      paddingBottom: 30,
+      fontSize: 20,
+      fontWeight: "800",
+      color:"white"
     },
     toDo: {
       backgroundColor: theme.toDoBg,

@@ -1,10 +1,14 @@
 
-import { View, TextInput, Button, StyleSheet, Alert, TouchableHighlight, Text, Modal } from 'react-native';
+import { View, TextInput, Button, StyleSheet, Alert, TouchableHighlight, Text, Modal, Platform } from 'react-native';
 import { StackScreenProps } from "@react-navigation/stack";
 import { RootStackParamList } from "../App";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Realm from 'realm'
+
 
 export type AddScreenProps = StackScreenProps<RootStackParamList, 'Add'>;
+
+var realm = new Realm();
 
 const AddScreen = ({navigation} : AddScreenProps) => {
     const [title, setTitle] = useState('');

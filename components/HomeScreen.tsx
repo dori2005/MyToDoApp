@@ -120,6 +120,12 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
 
   const refToDo = useRef<ToDoListComponentRefProps>(null);
 
+  const onAddToDo = (key:string, text:string) => {
+    if(refToDo?.current?.addToDo(key, text))
+      return true;
+    return false;
+  };
+
   const loadToDoList = useCallback(()=>{
     console.log("|HomeScreen| called loadTodoList");
     if (loginData !== undefined) 
@@ -245,7 +251,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
           <Calendar setFocusDay={onFocusDate} targetYM={targetYM} pageTarget={focusDate} ref={refCal}/>
           <ToDoComponent selectDate={focusDate} onUpdateToDo={onUpdateTodo} ref={refToDo}/>
           {addAction?(
-            <AddToDoComponent selectDate={focusDate} swichAddAction={swichAddAction} ref={null}/>
+            <AddToDoComponent selectDate={focusDate} onAddToDo={onAddToDo} swichAddAction={swichAddAction} ref={null}/>
           ):null}
         </BottomSheet>
       </View>

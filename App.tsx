@@ -1,21 +1,19 @@
 import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
-import AddScreen from './components/AddScreen';
 import HomeScreen from './components/HomeScreen';
 import LoginScreen from './components/LoginScreen';
 import { NavigationContainer } from '@react-navigation/native'
 import React from 'react'
-import SideBarComponent from './components/SideBarComponent';
 import { createStackNavigator } from '@react-navigation/stack'
+import { HeaderHeightContext } from '@react-navigation/elements';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 
 export type RootStackParamList = {
   Test: undefined;
   Home: undefined;
   Login: undefined;
-  Add: { selectDate: Date};
   SideBar: undefined;
   Profile: { userId: string };
-  Feed: { sort: 'latest' | 'top' } | undefined;
 };
 
 //const Stack = createStackNavigator();
@@ -24,37 +22,27 @@ const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 
 export default function App() {
 
+  // headerHeight 왜인지 동작하지 않는다.
   var headerHeight = 0;
   if(Platform.OS == "web") 
     headerHeight = SCREEN_HEIGHT/15;
-  else if(Platform.OS == "ios")
-    headerHeight = SCREEN_HEIGHT/8;
+  else if(Platform.OS == "ios")  //적어도 IOS에서는 쓸모가 없다.
+    headerHeight = SCREEN_HEIGHT/8; //하지만 UI는 1/8로 전부 맞췄었다. 이상하다.
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='Home'>
-        <Stack.Screen 
-          name='Home' 
-          component={HomeScreen}
-          options={{
-            headerStyle: { 
-              height: headerHeight,
-            },
-          }}
-        />
-        <Stack.Screen 
-          name='Login' 
-          component={LoginScreen}
-        />
-        <Stack.Screen 
-          name='Add' 
-          component={AddScreen}
-        />
-        <Stack.Screen
-          name='SideBar'
-          component={SideBarComponent}
-        />
-      </Stack.Navigator>
+      <HeaderHeightContext.Provider value={headerHeight}>
+        <Stack.Navigator initialRouteName='Home'>
+          <Stack.Screen 
+            name='Home' 
+            component={HomeScreen}
+          />
+          <Stack.Screen 
+            name='Login' 
+            component={LoginScreen}
+          />
+        </Stack.Navigator>
+      </HeaderHeightContext.Provider>
     </NavigationContainer>
   )
 }

@@ -1,4 +1,4 @@
-import BottomSheet, { BottomSheetRefProps } from './BottomSheet';
+import BottomSheet, { BottomSheetRefProps, MAX_TRANSLATE_Y } from './BottomSheet';
 import { Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import Calendar, { CalendarRefProps } from './Calendar';
 import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -8,7 +8,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../App';
-import SideBarComponent from './SideBarComponent';
 import { StatusBar } from 'expo-status-bar';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
@@ -21,7 +20,6 @@ const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
 export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
 const STORAGE_KEY_LOGIN = "@LoginData"
-const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*153/200
 
 type LOGIN_DATA = {
   token : string,
@@ -211,11 +209,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         <TouchableOpacity onPress={()=> onPressPre()}>
           <Text style={{...styles.headerButton, textAlign:'right'}}>◀</Text>
         </TouchableOpacity>
-        <Button 
-          title='Drawer 열기'
-          onPress={()=> {
-            navigation.push("SideBar");
-            }} />
       </View>
     )});
     navigation.setOptions({headerRight: rightButton});

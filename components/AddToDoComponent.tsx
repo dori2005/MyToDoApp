@@ -53,10 +53,11 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
       },[selectDate])
     useEffect(()=>{
       openLocalDB();
-
-      return () => {
-        realm?.close();
-      };
+      //현재 AddToDoComponent는 항상 ToDoList가 열려있는 상태에서 동작된다.
+      //때문에 굳이 Realm을 닫아줄 필요가 없다.
+      // return () => {
+      //   realm?.close();
+      // };
     },[])
 
     const openLocalDB = async () => {

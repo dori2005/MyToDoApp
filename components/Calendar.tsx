@@ -8,6 +8,7 @@ import { Schedule } from './Object/Schedule';
 import { ToDo } from './Object/ToDo';
 import { theme } from './util/color';
 import { useSharedValue } from 'react-native-reanimated'
+import { calendarBlockHeight, miniToDoBlockHeight, miniToDoViewHeight } from './util/size';
 
 interface DayData {
     date:number,
@@ -308,21 +309,23 @@ const styles = StyleSheet.create({
         width: SCREEN_WIDTH/7,
         paddingVertical: 8,
         paddingHorizontal: 4,
-        height: SCREEN_HEIGHT * 27/200, // 상단 여백 1/10, 하단여백 9/100, 여백 제외 81/100 * 1/6 = 27/200
+        // 상단 여백이 상관이 전혀 없는듯하다. 상위 Bottomsheet에서 총관리하기 때문에
+        // web 기준 1/15(헤더) + 1/30(요일) = 1/10 (상단 여백) 이지만, 의미 없는듯하다.
+        height: SCREEN_HEIGHT*calendarBlockHeight, // 상단 여백 1/10(추정), 하단여백 9/100, 여백 제외 81/100 * 1/6 = 27/200
         borderTopWidth: 1,
         borderColor:'white',
         backgroundColor : theme.background,
     },
     miniToDoBlock: {
         width: SCREEN_WIDTH/9,
-        height: SCREEN_HEIGHT * 3/40, // 27/200* 5/9
+        height: SCREEN_HEIGHT * miniToDoBlockHeight, // 27/200 * (5/9 => 반드시 지켜야하는 비율)
     },
     miniToDoRow: {
         flexDirection: 'row',
     },
     miniToDoView: {
         width: SCREEN_WIDTH/27,
-        height: SCREEN_HEIGHT * 1/40,
+        height: SCREEN_HEIGHT * miniToDoViewHeight,
         padding:2,
     },
     miniToDo : {

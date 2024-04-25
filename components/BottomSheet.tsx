@@ -1,12 +1,13 @@
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
 import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import React, { useCallback, useEffect, useImperativeHandle, useRef } from 'react'
+import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import ToDoListComponent, { ToDoListComponentRefProps } from './ToDoListComponent'
-import {focus, focus2, heads, property} from './resources/test'
+import {focus, heads, property} from './resources/test'
 
 import Calendar from './Calendar'
 import { theme } from './util/color'
+import { bottomSheetContainerTop, bottomSheetHeight, dayHeaderHeight, focus_height, headerHeight } from './util/size'
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 
@@ -14,11 +15,11 @@ const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 //상단 여백 1/10, 하단여백 9/100, 캘린더 칸당 81/100 * 1/6 = 27/200
 //상단 여백 + 캘린더 한칸 = 27/200 + 1/10 = 47/200
 //-(1 - 47/200) = -153/200
-export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*153/200  //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
+export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*bottomSheetHeight-1;//border width : 1 //맨 아래가 0에서부터 맨 위가 -SCREEN_HEIGHT
 
 interface BottomSheetProps {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
     children?: React.ReactNode[],
-    focusLine: number
+    focusLine: number,
 }
 
 export interface BottomSheetRefProps {    //TS에서 메소드를 export하기위한 type 선언 같이 보임. 
@@ -26,7 +27,8 @@ export interface BottomSheetRefProps {    //TS에서 메소드를 export하기�
     isActive: () => boolean
 }   //이후 useImperativeHandle로 input과 output을 조립하는듯 하다.
 
-const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({children, focusLine}, ref) => {  //(하위 컴포넌트, 파라미터)
+const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({children, focusLine }, ref) => {  //(하위 컴포넌트, 파라미터)
+    const [test, setTest] = useState(true);
     const translateY = useSharedValue(0)
     const active = useSharedValue(false);
     
@@ -64,15 +66,17 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({ch
         translateY.value = Math.min(translateY.value, 0);  //둘중에 작은값 반환
     }).onEnd(() => {
         if (active.value) {
-            if (translateY.value > -SCREEN_HEIGHT/1.13) 
+            if (translateY.value > -SCREEN_HEIGHT/1.13) {
                 scrollTo(0);
-            else 
+            } else {
                 scrollTo(MAX_TRANSLATE_Y);
+            }
         } else {
-            if (translateY.value > -25) 
+            if (translateY.value > -25) {
                 scrollTo(0);
-            else
+            } else {
                 scrollTo(MAX_TRANSLATE_Y);
+            }
         }
     })
 
@@ -97,7 +101,7 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({ch
 
     const focusOnDay = useAnimatedStyle(() => {
         if(focusLine >= 0 && focusLine <= 5) 
-            return {transform: [{translateY: -translateY.value*(focus2[focusLine])}]};
+            return {transform: [{translateY: -translateY.value*(focus_height[focusLine])}]};
         return {};
     })
 
@@ -136,7 +140,7 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: 'white',
         position: 'absolute',
-        top: SCREEN_HEIGHT-(SCREEN_HEIGHT/15),
+        top: SCREEN_HEIGHT*bottomSheetContainerTop,
         borderRadius: 25,
     },
     line: {
@@ -159,22 +163,22 @@ const styles = StyleSheet.create({
       width: '100%',
       backgroundColor: 'black',
       position: 'absolute',
-      top: -SCREEN_HEIGHT+(SCREEN_HEIGHT/15),
+      top: -SCREEN_HEIGHT*bottomSheetContainerTop,
     },
     calendarBody : {
         height: SCREEN_HEIGHT,
-        top:SCREEN_HEIGHT/30,
+        top:SCREEN_HEIGHT*dayHeaderHeight,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       position:'absolute'
     },
-    headItem: {
+    headItem: { //요일 입력 header
         justifyContent: 'center',
         alignItems: 'center',
         width: SCREEN_WIDTH/7,
-        height: SCREEN_HEIGHT/30,
+        height: SCREEN_HEIGHT*dayHeaderHeight, 
         borderTopWidth: 1,
         borderColor: 'white',
         backgroundColor : theme.background,

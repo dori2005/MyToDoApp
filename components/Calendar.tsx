@@ -6,9 +6,10 @@ import {bodyDatas, heads, property} from './resources/test'
 import Realm from 'realm';
 import { Schedule } from './Object/Schedule';
 import { ToDo } from './Object/ToDo';
-import { theme } from './util/color';
+import { theme, todoPalette } from './util/color';
 import { useSharedValue } from 'react-native-reanimated'
 import { calendarBlockHeight, miniToDoBlockHeight, miniToDoViewHeight } from './util/size';
+import { dateToString } from './ToDoListComponent';
 
 interface DayData {
     date:number,
@@ -20,13 +21,14 @@ interface Position {
     col:number,
     row:number
 };
-interface MiniTodo {
+interface MiniToDo {
     id:string,
     color:number,
     complete:boolean,
+    completeData?:string,
 }
 
-const dayPalette = ['gray', 'white', 'red', 'blue'];
+const dayPalette = [theme.subText, theme.calText, theme.holiday, theme.sub_holiday];
 var realm:Realm;
 
 export interface YM {
@@ -43,7 +45,7 @@ type CalendarProps = {
 
 
 export interface CalendarRefProps {
-    onUpdateToDo: (id:string, ym:string, day:number, fix:number) => void;
+    onUpdateToDo: (id:string, ym:string, day:number, fix:number, color:number) => void;
 }
 
 //
@@ -57,18 +59,22 @@ let todayBlock:Position = {
 const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay, pageTarget, targetYM}, ref) => {
 
     // targetMonth에는 목표 달의 1일 혹은 마지막일로 설정된다.
-    const [miniTodoList, setMiniTodoList] = useState<MiniTodo[][]>(new Array(31).fill([]));
+    const [miniTodoList, setMiniToDoList] = useState<MiniToDo[][]>(new Array(31).fill([]));
     const [,updateState] = useState({});
     const forceUpdate = useCallback(()=>updateState({}),[]);
     const today = new Date();   //현재 시간을 받아옴
     
-    const onUpdateToDo = (id:string, ym:string, day:number, fix:number) => {
-        const updateList:MiniTodo[] = [];
+    // fix - 0 : 특정 날짜에 todo 추가, 1 : todo 삭제, 2 : todo 수정
+    const onUpdateToDo = (id:string, ym:string, day:number, fix:number, color:number) => {
+        console.log("|Calendar| Call on Update ToDo");
+        let updateList:MiniToDo[] = [];
         if(ym != targetYM)
             return;
         if (fix == 0) {
-            miniTodoList[day-1].push({ "id":id, "color":0, "complete": false })
-            forceUpdate()
+            updateList = miniTodoList[day-1].slice()
+            updateList.push({ "id":id, "color":color, "complete": false });
+            miniTodoList[day-1] = updateList;
+            forceUpdate();
             return;
         }
         for(let i = 0; i < miniTodoList[day-1].length; i++) {
@@ -94,7 +100,7 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
         try {
           realm = await Realm.open({
             schema: [ToDo, Schedule],
-            schemaVersion: 11,
+            schemaVersion: 12,
           });
         }catch(e) {
           console.log(e);
@@ -102,30 +108,55 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
         roadAllSchedule();
     }
 
+    const roadToDo = (date:string) => {
+        const todoList:MiniToDo[] = [];
+        if(date === dateToString(new Date())){
+            const tasks = realm?.objects('ToDo').filtered(`complete = false`);
+
+            tasks.map((ob:any)=>{
+                todoList.push({ "id":ob["id"], "color":ob["color"], "complete":ob["complete"] });
+            })
+        }
+        const tasks2 = realm?.objects('ToDo').filtered('completeDate == $0', date);
+        tasks2.map((ob:any)=>{
+            todoList.push({ 
+                "id":ob["id"], "color":ob["color"], 
+                "complete":ob["complete"], 
+                "completeData":ob["completeData"] 
+            });
+        })
+        
+        return todoList;
+    }
     const roadSchedule = (date:string) => {
       const tasks = realm?.objects('Schedule').filtered(`date = '${date}'`);
 
-      const todoList:MiniTodo[] = [];
+      const scheduleList:MiniToDo[] = [];
       tasks.map((ob:any)=>{
-        todoList.push({ "id":ob["id"], "color":0, "complete":ob["complete"] });
+        scheduleList.push({ "id":ob["id"], "color":ob["color"], "complete":ob["complete"] });
       })
-      return todoList;
+      return scheduleList;
+    }
+    const roadMiniToDoList = (date:string) => {
+        const list = roadSchedule(date);
+        const con_list = list.concat(roadToDo(date));
+        return con_list;
     }
 
     const roadAllSchedule = () => {
         const ym = pageTarget.getFullYear().toString() + pageTarget.getMonth().toString();
         const lastDate = new Date(pageTarget.getFullYear(), pageTarget.getMonth() + 1, 0).getDate();
-        const todoListOfMon:MiniTodo[][] = new Array(31).fill([]);
+        const todoListOfMon:MiniToDo[][] = new Array(31).fill([]);
         for (let i = 1; i <= lastDate; i++) {
-            todoListOfMon[i-1] = roadSchedule(ym+i.toString());
+            todoListOfMon[i-1] = roadMiniToDoList(ym+i.toString());
         }
-        setMiniTodoList(todoListOfMon);
+        setMiniToDoList(todoListOfMon);
     }
 
     //월 변경시 이전 schedule 잔상 남는거 제거
     const resetAllSchedule = useMemo(() => {
-        const todoListOfMon:MiniTodo[][] = new Array(31).fill([]);
-        setMiniTodoList(todoListOfMon);
+        const todoListOfMon:MiniToDo[][] = new Array(31).fill([]);
+        setMiniToDoList(todoListOfMon);
     },[targetYM]);
 
     const [recentCal, setRecentCal] = useState<DayData[][]>();
@@ -207,19 +238,16 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
     useEffect(()=>{
         openLocalDB();
 
-        return () => {
-          realm?.close();
-        };
     },[targetYM])   // 날짜 선택시마다 DB 로드 방지
 
     const blockStyle = (select:boolean, idx1:number, idx2:number) => {
         if (select) {
             console.log("|Calendar| BlockStyle : red");
-            return {borderColor: 'red'} 
+            return {backgroundColor: theme.select} 
         }
         else if(todayBlock.row === idx1 && todayBlock.col === idx2){
             console.log("|Calendar| BlockStyle : blue");
-            return {borderColor: 'blue'}
+            return {backgroundColor: theme.today}
         }else 
             return {}
     }
@@ -243,8 +271,12 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
         const todayidx = today-1;
         const len = Math.floor(miniTodoList[todayidx].length/3)  //3, 6, 9 보다 클때를 구분
         const sub_len = miniTodoList[todayidx].length%3;
-        const subArray:MiniTodo[][] = new Array(len+1).fill([]);
+        const subArray:MiniToDo[][] = new Array(len+1).fill([]);
 
+        if(miniTodoList[todayidx].length > 0) {
+            console.log("|Calendar| RederMiniTodo len "+len);
+            console.log("|Calendar| RederMiniTodo sublen "+sub_len);
+        }
         let i = 0;
         for(; i < len; i++) {
             subArray[i] = miniTodoList[todayidx].slice(i*3, i*3+3);
@@ -257,9 +289,12 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                 {subArray.map((rows, idx1)=>(
                     <View key={idx1} style={styles.miniToDoRow}>
                         {rows.map((item, idx2)=>{
+                            console.log("|Calendar| render mini Todo color " + item.color);
+                            console.log(item);
                             return(<View key={idx2} style={styles.miniToDoView}>
                                 <View style={{...styles.miniToDo,
-                                    backgroundColor:item.complete?"blue":theme.background}}/>
+                                    backgroundColor:item.complete?todoPalette[item.color]:theme.background,
+                                    borderColor:todoPalette[item.color]}}/>
                             </View>
                         )})}
                     </View>
@@ -275,11 +310,13 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                 <View key={idx1} style={styles.row}>  
                     {array.map((value, idx2) => (
                         <TouchableOpacity key={idx2} onPress={()=>onPressDate(value,idx1,idx2)}
-                         style={[styles.rowItem, blockStyle(value.select,idx1,idx2)]}>
-                                <Text style={{...styles.text, color: dayPalette.at(value.color)}}>
+                         style={[styles.rowItem]}>
+                            <View style={[styles.dateBox, blockStyle(value.select,idx1,idx2)]}>
+                                <Text style={{...styles.dateText, color: dayPalette.at(value.color)}}>
                                     {value.date}
                                 </Text>
-                                {value.thisM?(renderMiniToDo(value.date)):null}
+                            </View>
+                            {value.thisM?(renderMiniToDo(value.date)):null}
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -296,9 +333,6 @@ const styles = StyleSheet.create({
         bottom : 0,
         backgroundColor: theme.background
     },
-    text : {
-        color: 'white',
-    },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -313,8 +347,21 @@ const styles = StyleSheet.create({
         // web 기준 1/15(헤더) + 1/30(요일) = 1/10 (상단 여백) 이지만, 의미 없는듯하다.
         height: SCREEN_HEIGHT*calendarBlockHeight, // 상단 여백 1/10(추정), 하단여백 9/100, 여백 제외 81/100 * 1/6 = 27/200
         borderTopWidth: 1,
-        borderColor:'white',
+        borderColor: theme.calBorder,
         backgroundColor : theme.background,
+    },
+    dateBox: {
+        top:-2,
+        left:-1,
+        width: SCREEN_WIDTH/16,
+        height: SCREEN_WIDTH/16,
+        borderRadius: SCREEN_WIDTH/32,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dateText : {
+        fontFamily: 'KCC-Hanbit',
+        color: theme.calText,
     },
     miniToDoBlock: {
         width: SCREEN_WIDTH/9,
@@ -330,7 +377,6 @@ const styles = StyleSheet.create({
     },
     miniToDo : {
         borderWidth:3,
-        borderColor:"blue",
         borderRadius:3,
         flex:1,
     }

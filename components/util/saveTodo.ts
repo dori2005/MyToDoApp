@@ -2,6 +2,7 @@
 type TodoData = {
     text:string,
     complete:boolean,
+    color:number
 };
 type LoadData = {
   id:number,
@@ -10,6 +11,7 @@ type LoadData = {
   group_id:string,
   text:string,
   complete:number,
+  color:number
 };
 type TodoList = {
     [key:string] : TodoData,
@@ -46,7 +48,7 @@ const updateStack:UpdateStack = {
     })
     .then((data) => {
       data.forEach((object:LoadData)=> {
-        todo[object["time"]] = { "text":object["text"], "complete":object["complete"]==0?false:true };
+        todo[object["time"]] = { "text":object["text"], "complete":object["complete"]==0?false:true, "color":object["color"] };
       })
     })
     .catch((error) => {

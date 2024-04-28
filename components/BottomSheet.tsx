@@ -116,14 +116,16 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({ch
                             {children[0]}
                         </Animated.View>
                     </View>
-                    {children[2]? (children[2]):null}
-                    {children[1]}
+                    <View style={[styles.bottomSheetMain]}>
+                        {children[2]? (children[2]):null}
+                        {children[1]}
+                    </View>
                     <View style={styles.line}/>
                 </Animated.View>
                 <View style={[styles.headerRow]}>  
                 {heads.map((value, index) => (
                     <View key={index} style={styles.headItem}>
-                        <Text style={styles.text}>{value}</Text>
+                        <Text style={styles.headItemText}>{value}</Text>
                     </View>           
                 ))}
                 </View>
@@ -138,7 +140,6 @@ const styles = StyleSheet.create({
     bottomSheetContainer: {
         height: SCREEN_HEIGHT,
         width: '100%',
-        backgroundColor: 'white',
         position: 'absolute',
         top: SCREEN_HEIGHT*bottomSheetContainerTop,
         borderRadius: 25,
@@ -146,9 +147,9 @@ const styles = StyleSheet.create({
     line: {
         width: 75,
         height: 4,
-        backgroundColor: 'white',
+        backgroundColor: theme.botTouchLine,
         alignSelf: 'center',
-        marginVertical: 15,
+        marginVertical: 20,
         borderRadius: 2,
         position: 'absolute',
     },
@@ -161,7 +162,6 @@ const styles = StyleSheet.create({
     underPanel: {
       height: SCREEN_HEIGHT,
       width: '100%',
-      backgroundColor: 'black',
       position: 'absolute',
       top: -SCREEN_HEIGHT*bottomSheetContainerTop,
     },
@@ -179,11 +179,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: SCREEN_WIDTH/7,
         height: SCREEN_HEIGHT*dayHeaderHeight, 
+        borderColor: theme.calHeadBord,
         borderTopWidth: 1,
-        borderColor: 'white',
         backgroundColor : theme.background,
     },
-    text : {
-        color: 'white',
+    headItemText : {
+        fontFamily: 'KCC-Hanbit',
+        color: theme.calText,
+    },
+    bottomSheetMain: {
+        height: SCREEN_HEIGHT,
+        width: '100%',
+        position: 'absolute',
+        backgroundColor:theme.botBord,
     },
 })

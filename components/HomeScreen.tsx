@@ -80,7 +80,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   };
 
   //=======================================
-  // ToDo, Calendar, BottomSheet 연동 관련
+  // BottomSheet 연동 관련
   //=======================================
   const refBS = useRef<BottomSheetRefProps>(null);
 
@@ -116,26 +116,31 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     onBottomSheet(needBottom);
   }
 
+  //==================================
+  // ToDoList 관련 (onAddToDo, loadToDoList)
+  //==================================
   const refToDo = useRef<ToDoListComponentRefProps>(null);
-
-  const onAddToDo = (key:string, text:string) => {
-    if(refToDo?.current?.addToDo(key, text))
+  const onAddToDo = (key:string, text:string, flag:string, color:number) => {
+    if(refToDo?.current?.addToDoList(key, text, flag, color))
       return true;
     return false;
   };
 
   const loadToDoList = useCallback(()=>{
-    console.log("|HomeScreen| called loadTodoList");
+    console.log("|HomeScreen| called loadToDoList");
     if (loginData !== undefined) 
-      refToDo?.current?.loadToDos(loginData['token']);
+      refToDo?.current?.loadToDoServer(loginData['token']);
   },[loginData])
 
+  //==================================
+  // Calendar 관련 (onUpdateToDo)
+  //==================================
   const refCal = useRef<CalendarRefProps>(null);
-  const onUpdateTodo = (id:string, date:Date, fix:number) => {
-    const ym = toStringYM(date);
+  const onUpdateToDo = (id:string, date:Date, fix:number, color:number) => {
+    const ym = ymToString(date);
     const day = date.getDate();
-    console.log("|Home| onUpdateTodo" + day);
-    refCal?.current?.onUpdateToDo(id, ym, day, fix);
+    console.log("|Home| onUpdateToDo" + day);
+    refCal?.current?.onUpdateToDo(id, ym, day, fix, color);
   }
   
   let page = 0;
@@ -144,23 +149,25 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   //==================================
   // Navigator 관련 (BottomSheet요소, HomeScreen요소 사용)
   //==================================
-  const toStringYM = (day:Date) => 
+  const ymToString = (day:Date) => 
+    day.getFullYear().toString() + day.getMonth().toString();
+  const getTitleYM = (day:Date) => 
     day.getFullYear().toString() + "." + (day.getMonth()+1).toString();
     
-  const [targetYM, setTargetYM] = useState(toStringYM(today));
+  const [targetYM, setTargetYM] = useState(ymToString(today));
 
   const onPressNext = useCallback(()=> {
     page++;
     const targetday = new Date(today.getFullYear(), today.getMonth()+page, 1);
     setFocusDate(targetday);
-    setTargetYM(toStringYM(targetday));
+    setTargetYM(ymToString(targetday));
   },[]);
 
   const onPressPre = useCallback(()=> {
     page--;
     const targetday = new Date(today.getFullYear(), today.getMonth()+page+1, 0);
     setFocusDate(targetday);
-    setTargetYM(toStringYM(targetday));
+    setTargetYM(ymToString(targetday));
   },[]);
   
   const rightButton = () => {
@@ -190,16 +197,17 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
 
   useEffect(() => {
     loadLoginData();
-    navigation.setOptions({title: targetYM});
+    navigation.setOptions({title: getTitleYM(focusDate)});
     navigation.setOptions({
       // Header 블록에 대한 스타일
       headerStyle: { 
-        backgroundColor: theme.background,
+        backgroundColor: theme.headBack,
       },
       // Header의 텍스트, 버튼 색상
-      headerTintColor: '#ffffff',
+      headerTintColor: theme.headText,
       // 타이틀 텍스트의 스타일
       headerTitleStyle: {
+        fontFamily: 'KCC-Hanbit',
         fontWeight: 'bold',
         fontSize: 20,
       },
@@ -242,7 +250,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         <StatusBar style="light" />
         <BottomSheet focusLine={focusLine} ref={refBS}>
           <Calendar setFocusDay={onFocusDate} targetYM={targetYM} pageTarget={focusDate} ref={refCal}/>
-          <ToDoComponent selectDate={focusDate} onUpdateToDo={onUpdateTodo} ref={refToDo}/>
+          <ToDoComponent selectDate={focusDate} onUpdateToDo={onUpdateToDo} ref={refToDo}/>
           {addAction?(
             <AddToDoComponent selectDate={focusDate} onAddToDo={onAddToDo} swichAddAction={swichAddAction} ref={null}/>
           ):null}
@@ -331,6 +339,6 @@ const styles = StyleSheet.create({
   headerButton: {
     width:SCREEN_WIDTH/5,
     fontSize: 30,
-    color:"white",
+    color: theme.headText,
   }
 });

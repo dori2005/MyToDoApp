@@ -8,13 +8,13 @@ export const dayHeaderHeight = 1/30;
 // 비율 calendarblockheight : focus under
 // 
 // 27/200       : 0.12
-// 26/200       : 0.158
+// 26/200       : 0.158(?)
 // 25/200(1/8)  : 0.195
 // 24/200       : 0.233
 //상단 여백(밀어냄) [헤더] 1/10
 // 
 export const calendarBlockHeight = 1/8;
-export const miniToDoBlockHeight = calendarBlockHeight * 5/9;
+export const miniToDoBlockHeight = calendarBlockHeight * 6/11;
 export const miniToDoViewHeight = miniToDoBlockHeight/3;
 // 상단여백 1/10, 여백 19/100 => under 0.12
 // 20/300 + 57/300 => 77/300

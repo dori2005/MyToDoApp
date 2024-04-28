@@ -100,6 +100,19 @@ const LoginScreen = ({ navigation } : LoginScreenProps) => {
         setPwText(text)
         console.log(pwText);
     }
+
+    const notworking = () => {
+      Alert.alert(
+        "미 구현 기능",
+        "로그인 기능은 아직 구현되지 않았습니다.", [
+        { text: "Cancel" },
+        {
+          text: "돌아가기",
+          style: "destructive",
+          onPress: () => navigation.pop()
+        },
+      ]);
+    }
     
     return (
       <View style={styles.container}>
@@ -130,13 +143,21 @@ const LoginScreen = ({ navigation } : LoginScreenProps) => {
                       value={pwText}
                       secureTextEntry
                   />
-                  <TouchableOpacity style={styles.button}>
-                      <Text style={styles.buttonText}>로그인</Text>
+                  <TouchableOpacity style={styles.button}
+                    onPress={notworking}
+                  >
+                    <Text style={styles.buttonText}>로그인</Text>
                   </TouchableOpacity>
                   <View style={styles.divider}></View>
-                  <TouchableOpacity style={styles.socialButton}>
-                      <Image source={require('./resources/google-icon-white.png')} style={styles.socialButtonIcon} />
-                      <Text style={styles.socialButtonText}>Google로 로그인</Text>
+                  <TouchableOpacity style={styles.socialButton}
+                    onPress={notworking}
+                  >
+                    <Image source={require('../assets/kakao_login_medium_wide.png')} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.socialButton}
+                    onPress={notworking}
+                  >
+                    <Image source={require('../assets/web_light_sq_ctn@3x.png')} />
                   </TouchableOpacity>
               </>
           )}
@@ -155,13 +176,21 @@ const LoginScreen = ({ navigation } : LoginScreenProps) => {
                       value={pwText}
                       secureTextEntry
                   />
-                  <TouchableOpacity style={styles.button}>
-                      <Text style={styles.buttonText}>회원가입</Text>
+                  <TouchableOpacity style={styles.button}
+                    onPress={notworking}
+                  >
+                    <Text style={styles.buttonText}>회원가입</Text>
                   </TouchableOpacity>
                   <View style={styles.divider}></View>
-                  <TouchableOpacity style={styles.socialButton}>
-                      <Image source={require('./resources/google-icon-white.png')} style={styles.socialButtonIcon} />
-                      <Text style={styles.socialButtonText}>Google로 가입</Text>
+                  <TouchableOpacity style={styles.socialButton}
+                    onPress={notworking}
+                  >
+                    <Image source={require('../assets/kakao_login_medium_wide.png')} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.socialButton}
+                    onPress={notworking}
+                  >
+                      <Image source={require('../assets/web_light_sq_ctn@3x.png')} />
                   </TouchableOpacity>
               </>
           )}

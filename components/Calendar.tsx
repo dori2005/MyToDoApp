@@ -2,14 +2,14 @@ import { Dimensions, LayoutChangeEvent, NativeUIEvent, StyleSheet, Text, View } 
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import {bodyDatas, heads, property} from './resources/test'
+import { calendarBlockHeight, miniToDoBlockHeight, miniToDoViewHeight } from './util/size';
+import { theme, todoPalette } from './util/color';
 
 import Realm from 'realm';
 import { Schedule } from './Object/Schedule';
 import { ToDo } from './Object/ToDo';
-import { theme, todoPalette } from './util/color';
-import { useSharedValue } from 'react-native-reanimated'
-import { calendarBlockHeight, miniToDoBlockHeight, miniToDoViewHeight } from './util/size';
 import { dateToString } from './ToDoListComponent';
+import { useSharedValue } from 'react-native-reanimated'
 
 interface DayData {
     date:number,

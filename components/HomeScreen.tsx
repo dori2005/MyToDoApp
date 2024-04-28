@@ -6,14 +6,15 @@ import { StackScreenProps, createStackNavigator } from '@react-navigation/stack'
 import ToDoComponent, { ToDoListComponentRefProps } from './ToDoListComponent';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import AddToDoComponent from './AddToDoComponent';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Entypo } from '@expo/vector-icons';
 import { RootStackParamList } from '../App';
 import { StatusBar } from 'expo-status-bar';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { enableLayoutAnimations } from 'react-native-reanimated';
 import signAlert from './util/Tools';
 import { theme } from './util/color';
-import AddToDoComponent from './AddToDoComponent';
 
 const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
 
@@ -113,7 +114,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     console.log(target);
     setFocusDate(target);
     setFocusLine(line);
-    onBottomSheet(needBottom);
+    //onBottomSheet(needBottom);
   }
 
   //==================================
@@ -177,6 +178,10 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
           <TouchableOpacity onPress={()=> onPressNext()}>
             <Text style={styles.headerButton}>▶</Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={()=> {
+              setLogin(false);
+              removeLoginData();
+            }}/>
             <Button onPress={()=>{
               setLogin(false);
               removeLoginData();
@@ -188,9 +193,12 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         <TouchableOpacity onPress={()=> onPressNext()}>
           <Text style={styles.headerButton}>▶</Text>
         </TouchableOpacity>
-        <Button onPress={()=> {
-          navigation.push("Login");
-        }} title="Login"/>
+        <TouchableOpacity style={styles.menuButton} 
+          onPress={()=>{
+            navigation.push("Login");
+        }}>
+          <Entypo name="menu" size={40} color={theme.headMenu} />
+        </TouchableOpacity>
       </View>
     )
   }
@@ -291,6 +299,11 @@ const styles = StyleSheet.create({
   right_top: {
       flexDirection: "row",
   },
+  menuButton: {
+    marginLeft:10,
+    padding:5,
+  },
+
   add_button_view: {
     width: 60,
     height: 60,
@@ -337,6 +350,7 @@ const styles = StyleSheet.create({
     alignItems:'center'
   },
   headerButton: {
+    paddingBottom:5,
     width:SCREEN_WIDTH/5,
     fontSize: 30,
     color: theme.headText,

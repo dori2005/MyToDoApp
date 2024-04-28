@@ -11,17 +11,16 @@ import {
 } from 'react-native';
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { Schedule, ScheduleData } from './Object/Schedule';
+import { theme, todoPalette } from './util/color';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FontAwesome } from '@expo/vector-icons';
 import Realm from 'realm';
 import { StatusBar } from 'expo-status-bar';
 import { ToDo } from './Object/ToDo';
 import { YM } from './Calendar';
-import { theme, todoPalette } from './util/color';
+import server from './util/saveTodo';
 import {useQuery} from '@realm/react';
 
-import server from './util/saveTodo';
 const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
 
 const STORAGE_KEY = "@ToDos"
@@ -247,7 +246,7 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
       addToDoList
     ]); 
   
-    const deleteAction = async(deleteIdx:number, type:string) => {
+    const deleteAction = (deleteIdx:number, type:string) => {
       let key = "";
       if(type === "ToDo") {
         key = toDos[deleteIdx].id;
@@ -255,22 +254,29 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
         console.log(newToDos);
         console.log("delete ToDo");
         realmDeleteToDo(key);
+        console.log(toDos.length);
         console.log("delete ToDo2");
-        server.renewUpdate(2, key);
-        setToDos(newToDos);
+        if(toDos.length === 0)
+          setToDos([]);
+        else 
+          setToDos(newToDos);
       }
       else if(type === "Schedule") {
         key = schedules[deleteIdx].id;
         const newSchedules = schedules.splice(deleteIdx,1);
         console.log(newSchedules);
         console.log("delete schedule");
+        console.log(newSchedules.length);
         realmDeleteSchedule(key);
         console.log("delete schedule2");
-        server.renewUpdate(2, key);
-        setSchedules(newSchedules);
+        if(schedules.length === 0)
+          setSchedules([]);
+        else 
+          setSchedules(newSchedules);
       }
       console.log("|ToDoList| deleteAction " + key);
       onUpdateToDo(key, selectDate, 1, -1);
+      //server.renewUpdate(2, key);
     }
       
     const deleteToDo = (idx:number, type:string) => {

@@ -29,6 +29,7 @@ export const theme = {
     
     headBack: "#FAF8F7",
     headText: "#3B3839",
+    headMenu: "#8F888C",
 };
 
 export const todoPalette = [

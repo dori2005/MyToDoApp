@@ -1,17 +1,16 @@
-
-import { View, TextInput, Button, StyleSheet, Alert, TouchableHighlight, Text, Modal, Platform, Dimensions } from 'react-native';
-import { StackScreenProps } from "@react-navigation/stack";
-import { RootStackParamList } from "../App";
+import { Alert, Button, Dimensions, Modal, Platform, StyleSheet, Text, TextInput, TouchableHighlight, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import Realm from 'realm'
-import server from './util/saveTodo';
 import { Schedule, ScheduleData } from './Object/Schedule';
 import { ToDo, ToDoData } from './Object/ToDo';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import { theme, todoPalette } from './util/color';
+
+import Realm from 'realm'
+import { RootStackParamList } from "../App";
+import { StackScreenProps } from "@react-navigation/stack";
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { dateToString } from './ToDoListComponent';
 import { heads } from './resources/test';
-
+import server from './util/saveTodo';
 
 interface AddToDoProps {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
     selectDate:Date;
@@ -53,7 +52,6 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
         setDate(selectDate.getDate().toString());
         
         if(dateToString(selectDate) === dateToString(new Date())) {
-          console.log("TESTESTETSE");
           setType("ToDo");
         }else 
           setType("Schedule");
@@ -118,6 +116,18 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
           console.log("|AddToDo| createToDo - select date : "+select);
           const schedule_data = { text:title, date:select, complete: false, color};
           realmCreateSchedule(time, schedule_data);
+        }else if (type === "Habit"){
+          console.log("|AddToDo| request Canceled");
+          Alert.alert(
+            "습관 기록",
+            "습관 기록은 아직 구현되지 않았습니다.", [
+            { text: "Cancel" },
+            {
+              text: "OK",
+              style: "destructive",
+            },
+          ]);
+          return;
         }
         console.log("|AddToDo| AddToDo color "+color);
         onAddToDo(time, title, type, color);
@@ -140,25 +150,34 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
     const selectColor = (index:number) => {
   };
 
+  const renderAdditionalText = () => {
+    if (type === 'ToDo') {
+      return (
+        <Text style={styles.dateText}>
+          ToDo : 이룰 때까지
+        </Text>
+      );
+    }else if (type === 'Schedule') {
+      return (
+        <Text style={styles.dateText}>
+          Schedule : {
+          selectDate.getFullYear().toString()
+          +"."+(selectDate.getMonth()+1).toString()
+          +"."+date+" ("+heads[selectDate.getDay()]+")"
+          }
+        </Text>
+      );
+    } else if (type === 'Habit') {
+      return (
+        <Text style={styles.dateText}>
+          Habit : 습관 만들기
+        </Text>)
+    }
+    return null;
+  };
 
       const renderAdditionalInput = () => {
-        if (type === 'ToDo') {
-          return (
-            <Text style={styles.dateText}>
-              ToDo : 이룰 때까지
-            </Text>
-          );
-        }else if (type === 'Schedule') {
-          return (
-            <Text style={styles.dateText}>
-              Schedule : {
-              selectDate.getFullYear().toString()
-              +"."+selectDate.getMonth().toString()
-              +"."+date+" ("+heads[selectDate.getDay()]+")"
-              }
-            </Text>
-          );
-        } else if (type === 'Habit') {
+        if (type === 'Habit') {
           return (
             <View style={styles.selectContainer}>
               <Text style={styles.heading}>Select Days:</Text>
@@ -182,14 +201,15 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
 
     return (
         <View style={styles.container}>
+          {renderAdditionalText()}
             <TextInput
-            onChangeText={(text)=>setTitle(text)}
-            returnKeyType='done'
-            value={title}
-            placeholder={ "Enter To Do" }
-            style={styles.input}
+              autoFocus={true}
+              onChangeText={(text)=>setTitle(text)}
+              returnKeyType='done'
+              value={title}
+              placeholder={ "Enter To Do" }
+              style={styles.input}
             />
-            {renderAdditionalInput()}
             <View style={styles.selectContainer}>
               <Text style={styles.heading}>Select Color:</Text>
               <View style={styles.buttonContainer}>
@@ -202,24 +222,22 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
                 ))}
               </View>
             </View>
-            <View style={styles.horizontalButtons}>
-                <Button
-                    title="Habit"
-                    onPress={() => setType('Habit')}
-                    color={type === 'Habit' ? '#007bff' : '#333'}
-                />
-                <Button
-                    title="Schedule"
-                    onPress={() => setType('Schedule')}
-                    color={type === 'Schedule' ? '#007bff' : '#333'}
-                />
-                <Button
-                    title="ToDo"
-                    onPress={() => setType('ToDo')}
-                    color={type === 'ToDo' ? '#007bff' : '#333'}
-                />
+            {renderAdditionalInput()}
+            <View style={{...styles.horizontalButtons, bottom:SCREEN_HEIGHT*9/40}}>
+                <TouchableOpacity
+                  onPress={() => setType('Habit')}
+                  style={{...styles.tabButton, borderWidth:type === 'Habit' ? 3 : 0}}
+                ><Text style={styles.tabButtonText}>Habit</Text></TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setType('Schedule')}
+                  style={{...styles.tabButton, borderWidth:type === 'Schedule' ? 3 : 0}}
+                ><Text style={styles.tabButtonText}>Schedule</Text></TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setType('ToDo')}
+                  style={{...styles.tabButton, borderWidth:type === 'ToDo' ? 3 : 0}}
+                ><Text style={styles.tabButtonText}>ToDo</Text></TouchableOpacity>
             </View>
-            <View style={styles.horizontalButtons}>
+            <View style={{...styles.horizontalButtons, bottom:SCREEN_HEIGHT/30}}>
                 <Button 
                     title="Cancel" onPress={handleCancelAdd}
                     color={'red'}
@@ -235,36 +253,47 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
       borderTopWidth:2,
       borderColor:theme.calBorder,
       height: SCREEN_HEIGHT*153/200,
-      justifyContent: 'flex-end',
       alignItems: 'center',
       padding: 20,
-      backgroundColor: '#f0f0f0',
+      backgroundColor: theme.todoListContainer,
+    },
+    dateText: {
+      fontFamily: 'KCC-Hanbit',
+      fontSize: 22,
+      padding:20,
+      paddingVertical:25,
     },
     input: {
-      top:SCREEN_HEIGHT/6,
-      position:"absolute",
         width: '100%',
         height: 40,
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 5,
         paddingHorizontal: 10,
-        marginBottom: 10,
-    },
-    dateText: {
-      top:SCREEN_HEIGHT/18,
-      position:"absolute",
-      fontFamily: 'KCC-Hanbit',
-      fontSize: 22,
-      padding:20,
-      paddingBottom:25,
+        marginBottom: 20,
     },
     horizontalButtons: {
+      position:"absolute",
       paddingBottom:20,
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginBottom: 10,
       width: '100%',
+    },
+    tabButton: {
+      top:5,
+      borderRadius:20,
+      borderColor:theme.botBord,
+      backgroundColor:theme.todoListContainer,
+      width:SCREEN_WIDTH/4,
+      height:SCREEN_HEIGHT/20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    tabButtonText: {
+      fontFamily: 'KCC-Hanbit',
+      fontWeight:"400",
+      fontSize:14,
     },
     
     selectContainer: {
@@ -292,7 +321,7 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
         height: SCREEN_WIDTH / 12
     },
     dayButton: {
-        paddingVertical: 10,
+        paddingVertical:8,
         margin: 5,
         borderRadius: 5,
         borderColor: '#333',

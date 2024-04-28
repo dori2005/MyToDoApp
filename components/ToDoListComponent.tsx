@@ -250,29 +250,17 @@ const ToDoComponent = React.forwardRef<ToDoListComponentRefProps,ToDoListCompone
       let key = "";
       if(type === "ToDo") {
         key = toDos[deleteIdx].id;
-        const newToDos = toDos.splice(deleteIdx, 1);
-        console.log(newToDos);
-        console.log("delete ToDo");
+        const newToDos = toDos.slice();
+        newToDos.splice(deleteIdx, 1);
         realmDeleteToDo(key);
-        console.log(toDos.length);
-        console.log("delete ToDo2");
-        if(toDos.length === 0)
-          setToDos([]);
-        else 
-          setToDos(newToDos);
+        setToDos(newToDos);
       }
       else if(type === "Schedule") {
         key = schedules[deleteIdx].id;
-        const newSchedules = schedules.splice(deleteIdx,1);
-        console.log(newSchedules);
-        console.log("delete schedule");
-        console.log(newSchedules.length);
+        const newSchedules = schedules.slice(); 
+        newSchedules.splice(deleteIdx, 1);
         realmDeleteSchedule(key);
-        console.log("delete schedule2");
-        if(schedules.length === 0)
-          setSchedules([]);
-        else 
-          setSchedules(newSchedules);
+        setSchedules(newSchedules);
       }
       console.log("|ToDoList| deleteAction " + key);
       onUpdateToDo(key, selectDate, 1, -1);

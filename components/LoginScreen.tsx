@@ -157,7 +157,7 @@ const LoginScreen = ({ navigation } : LoginScreenProps) => {
                   <TouchableOpacity style={styles.socialButton}
                     onPress={notworking}
                   >
-                    <Image source={require('../assets/web_light_sq_ctn@3x.png')} />
+                    <Image source={require('../assets/web_light_sq_ctn.png')} />
                   </TouchableOpacity>
               </>
           )}
@@ -190,7 +190,7 @@ const LoginScreen = ({ navigation } : LoginScreenProps) => {
                   <TouchableOpacity style={styles.socialButton}
                     onPress={notworking}
                   >
-                      <Image source={require('../assets/web_light_sq_ctn@3x.png')} />
+                      <Image source={require('../assets/web_light_sq_ctn.png')} />
                   </TouchableOpacity>
               </>
           )}

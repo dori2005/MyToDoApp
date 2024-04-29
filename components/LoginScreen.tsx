@@ -100,7 +100,7 @@ const LoginScreen = ({ navigation } : LoginScreenProps) => {
         setPwText(text)
         console.log(pwText);
     }
-
+    
     const notworking = () => {
       Alert.alert(
         "미 구현 기능",
@@ -113,7 +113,6 @@ const LoginScreen = ({ navigation } : LoginScreenProps) => {
         },
       ]);
     }
-    
     return (
       <View style={styles.container}>
           <View style={styles.tabContainer}>
@@ -157,7 +156,7 @@ const LoginScreen = ({ navigation } : LoginScreenProps) => {
                   <TouchableOpacity style={styles.socialButton}
                     onPress={notworking}
                   >
-                    <Image source={require('../assets/web_light_sq_ctn.png')} />
+                    <Image source={require('../assets/web_light_sq_ctn.png')} style={{ width:"95%",height:63,top:10}} />
                   </TouchableOpacity>
               </>
           )}
@@ -190,7 +189,7 @@ const LoginScreen = ({ navigation } : LoginScreenProps) => {
                   <TouchableOpacity style={styles.socialButton}
                     onPress={notworking}
                   >
-                      <Image source={require('../assets/web_light_sq_ctn.png')} />
+                      <Image source={require('../assets/web_light_sq_ctn.png')} style={{ width:"95%",height:63,top:10}} />
                   </TouchableOpacity>
               </>
           )}
@@ -269,7 +268,6 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#DB4437',
       borderRadius: 10,
   },
   socialButtonIcon: {

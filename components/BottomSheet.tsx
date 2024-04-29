@@ -3,11 +3,11 @@ import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import ToDoListComponent, { ToDoListComponentRefProps } from './ToDoListComponent'
+import { bottomSheetContainerTop, bottomSheetHeight, dayHeaderHeight, focus_height, headerHeight } from './util/size'
 import {focus, heads, property} from './resources/test'
 
 import Calendar from './Calendar'
 import { theme } from './util/color'
-import { bottomSheetContainerTop, bottomSheetHeight, dayHeaderHeight, focus_height, headerHeight } from './util/size'
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')
 
@@ -66,13 +66,13 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({ch
         translateY.value = Math.min(translateY.value, 0);  //둘중에 작은값 반환
     }).onEnd(() => {
         if (active.value) {
-            if (translateY.value > -SCREEN_HEIGHT/1.13) {
+            if (translateY.value > -SCREEN_HEIGHT*5/7) {
                 scrollTo(0);
             } else {
                 scrollTo(MAX_TRANSLATE_Y);
             }
         } else {
-            if (translateY.value > -25) {
+            if (translateY.value > -SCREEN_HEIGHT/10) {
                 scrollTo(0);
             } else {
                 scrollTo(MAX_TRANSLATE_Y);

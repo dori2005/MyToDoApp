@@ -3,11 +3,12 @@ import { Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native'
 import Calendar, { CalendarRefProps } from './Calendar';
 import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StackScreenProps, createStackNavigator } from '@react-navigation/stack';
-import ToDoComponent, { ToDoListComponentRefProps } from './ToDoListComponent';
+import ToDoComponent, { ToDoListComponentRefProps, dateToString } from './ToDoListComponent';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AddToDoComponent from './AddToDoComponent';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DrawerActions } from '@react-navigation/native';
 import { Entypo } from '@expo/vector-icons';
 import { RootStackParamList } from '../App';
 import { StatusBar } from 'expo-status-bar';
@@ -97,24 +98,26 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   },[]);
 
   //needBottom은 BottomSheet 활성화가 필요한지 나타낸다.
-  const onBottomSheet = (needBottom:boolean) => {
+  const onBottomSheet = (need:boolean) => {
     const isActive = refBS?.current?.isActive();
     wasActive=isActive;
-    if(!needBottom && isActive) { 
+    if(!need && isActive) { 
       refBS?.current?.scrollTo(0)
       return;
     }
-    if(needBottom && !isActive) {
+    if(need && !isActive) {
       refBS?.current?.scrollTo(MAX_TRANSLATE_Y)
     }
   }
 
-  const onFocusDate = (target:Date, line:number, needBottom:boolean) => {
-    console.log("|Home| onFocusDate, target =>")
-    console.log(target);
-    setFocusDate(target);
-    setFocusLine(line);
-    //onBottomSheet(needBottom);
+  const onFocusDate = (target:Date, line:number, need:boolean) => {
+    console.log("|Home| onFocusDate, target "+dateToString(focusDate)+"=>"+dateToString(target));
+    if(dateToString(focusDate) === dateToString(target))
+      onBottomSheet(need);
+    else {
+      setFocusDate(target);
+      setFocusLine(line);
+    }
   }
 
   //==================================
@@ -172,22 +175,6 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
   },[]);
   
   const rightButton = () => {
-    if (login) {
-      return(
-        <View style={styles.headerRight}>
-          <TouchableOpacity onPress={()=> onPressNext()}>
-            <Text style={styles.headerButton}>▶</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={()=> {
-              setLogin(false);
-              removeLoginData();
-            }}/>
-            <Button onPress={()=>{
-              setLogin(false);
-              removeLoginData();
-            }} title="Logout"/>
-        </View>);
-    }
     return(
       <View style={styles.headerRight}>
         <TouchableOpacity onPress={()=> onPressNext()}>
@@ -195,7 +182,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuButton} 
           onPress={()=>{
-            navigation.push("Login");
+            navigation.dispatch(DrawerActions.openDrawer())
         }}>
           <Entypo name="menu" size={40} color={theme.headMenu} />
         </TouchableOpacity>
@@ -257,7 +244,11 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
       <View style={styles.container}>  
         <StatusBar style="light" />
         <BottomSheet focusLine={focusLine} ref={refBS}>
-          <Calendar setFocusDay={onFocusDate} targetYM={targetYM} pageTarget={focusDate} ref={refCal}/>
+          <Calendar 
+            setFocusDay={onFocusDate} 
+            targetYM={targetYM} 
+            pageTarget={focusDate}  
+            ref={refCal}/>
           <ToDoComponent selectDate={focusDate} onUpdateToDo={onUpdateToDo} ref={refToDo}/>
           {addAction?(
             <AddToDoComponent selectDate={focusDate} onAddToDo={onAddToDo} swichAddAction={swichAddAction} ref={null}/>

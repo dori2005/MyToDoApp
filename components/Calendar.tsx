@@ -122,7 +122,7 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
             todoList.push({ 
                 "id":ob["id"], "color":ob["color"], 
                 "complete":ob["complete"], 
-                "completeData":ob["completeData"] 
+                "completeData":ob["completeDate"] 
             });
         })
         
@@ -198,7 +198,6 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                 else if( day <= lastDate ) {
                     if(day === today.getDate()) {
                         if(today.getMonth() === thisMonth && today.getFullYear() === thisYear) {
-                            console.log("|GetRecentCal| toDay" + day);
                             todayBlock = {
                                 "row":row,
                                 "col":col
@@ -213,7 +212,6 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                         }
                     }
                     if (day === targetDay) {
-                        console.log("|GetRecentCal| targetDay" + day);
                         value.select = true;
                     }
                     value.date = day;
@@ -242,11 +240,9 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
 
     const blockStyle = (select:boolean, idx1:number, idx2:number) => {
         if (select) {
-            console.log("|Calendar| BlockStyle : red");
             return {backgroundColor: theme.select} 
         }
         else if(todayBlock.row === idx1 && todayBlock.col === idx2){
-            console.log("|Calendar| BlockStyle : blue");
             return {backgroundColor: theme.today}
         }else 
             return {}
@@ -261,8 +257,10 @@ const Calendar = React.forwardRef<CalendarRefProps, CalendarProps>(({setFocusDay
                     pageTarget.getFullYear(), 
                     pageTarget.getMonth(), 
                     value.date
-                    ), idx, true)
-    }},[pageTarget]) //**depth에 pageTarget을 설정안하면, 해당 함수 내에서 pageTarget은 초기값으로 고정된다.
+                ), idx, true
+            )
+        }
+    },[pageTarget]) //**depth에 pageTarget을 설정안하면, 해당 함수 내에서 pageTarget은 초기값으로 고정된다.
     //useCallback으로 감싸주면 react가 함수를 저장하고 
     //두 번째 매개변수인 dependencies가 변경되지 않는다면 함수를 재생성하지 않기 때문에
     //해당 함수를 props로 가지는 자식 컴포넌트들은 함수가 바뀌었다고 생각하지 않게 된다

@@ -224,6 +224,11 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     }else 
       onBottomSheet(false); 
   };
+  
+  const cancelAddAction = () => {
+    setAddAction(false);
+  }
+
   const addButton = () => {
     if(addAction)
       return(null);
@@ -243,7 +248,7 @@ const HomeScreen = ({navigation} : HomeScreenProps) => {
     <GestureHandlerRootView style={{flex:1}}>
       <View style={styles.container}>  
         <StatusBar style="light" />
-        <BottomSheet focusLine={focusLine} ref={refBS}>
+        <BottomSheet focusLine={focusLine} cancelAddAction={cancelAddAction} ref={refBS}>
           <Calendar 
             setFocusDay={onFocusDate} 
             targetYM={targetYM} 

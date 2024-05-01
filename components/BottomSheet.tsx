@@ -1,4 +1,4 @@
-import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
+import Animated, { Extrapolation, interpolate, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
 import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
@@ -20,6 +20,7 @@ export const MAX_TRANSLATE_Y = -SCREEN_HEIGHT*bottomSheetHeight-1;//border width
 interface BottomSheetProps {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
     children?: React.ReactNode[],
     focusLine: number,
+    cancelAddAction: ()=>void;
 }
 
 export interface BottomSheetRefProps {    //TS에서 메소드를 export하기위한 type 선언 같이 보임. 
@@ -27,8 +28,7 @@ export interface BottomSheetRefProps {    //TS에서 메소드를 export하기�
     isActive: () => boolean
 }   //이후 useImperativeHandle로 input과 output을 조립하는듯 하다.
 
-const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({children, focusLine }, ref) => {  //(하위 컴포넌트, 파라미터)
-    const [test, setTest] = useState(true);
+const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({children, focusLine, cancelAddAction}, ref) => {  //(하위 컴포넌트, 파라미터)
     const translateY = useSharedValue(0)
     const active = useSharedValue(false);
     
@@ -39,7 +39,13 @@ const BottomSheet = React.forwardRef<BottomSheetRefProps, BottomSheetProps>(({ch
         //worklet은 Reanimated에 필수적인듯 함.
         //동기적으로 호출이 가능하게 된다고 한다.
         'worklet';  
-        
+        if(active.value && destination === 0){
+             //Animated 내부에서는 useState 요소를 일반적으로 사용할 경우.
+             //Tried to synchronously call a non-worklet function on the UI thread
+             //위와 같은 오류가 발생하게 된다. 
+             //때문에 정상적으로 js스레드에서 실행될 수 있도록 runOnJS를 사용해준다.
+            runOnJS(cancelAddAction)();
+        }
         active.value = destination !== 0;
 
         translateY.value = withSpring(destination, { damping: 50 }); //자매품 withTiming

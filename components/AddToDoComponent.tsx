@@ -100,7 +100,6 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
           })
         });
       }
-  
     
     const addToDo = () => {
         const time = Date.now().toString();
@@ -223,7 +222,7 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
               </View>
             </View>
             {renderAdditionalInput()}
-            <View style={{...styles.horizontalButtons, bottom:SCREEN_HEIGHT*9/40}}>
+            <View style={{...styles.horizontalButtons, bottom:90}}>
                 <TouchableOpacity
                   onPress={() => setType('Habit')}
                   style={{...styles.tabButton, borderWidth:type === 'Habit' ? 3 : 0}}
@@ -237,7 +236,7 @@ const AddToDoComponent = React.forwardRef<AddToDoRefProps, AddToDoProps>(({selec
                   style={{...styles.tabButton, borderWidth:type === 'ToDo' ? 3 : 0}}
                 ><Text style={styles.tabButtonText}>ToDo</Text></TouchableOpacity>
             </View>
-            <View style={{...styles.horizontalButtons, bottom:SCREEN_HEIGHT/30}}>
+            <View style={{...styles.horizontalButtons, bottom:20}}>
                 <Button 
                     title="Cancel" onPress={handleCancelAdd}
                     color={'red'}

@@ -1,16 +1,16 @@
 import { Alert, Button, Dimensions, Modal, Platform, StyleSheet, Text, TextInput, TouchableHighlight, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { Schedule, ScheduleData } from './Object/Schedule';
-import { ToDo, ToDoData } from './Object/ToDo';
-import { theme, todoPalette } from './util/color';
+import { Schedule, ScheduleData } from '../object/Schedule';
+import { ToDo, ToDoData } from '../object/ToDo';
+import { theme, todoPalette } from '../util/color';
 
 import Realm from 'realm'
-import { RootStackParamList } from "../App";
+import { RootStackParamList } from "../../App";
 import { StackScreenProps } from "@react-navigation/stack";
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { dateToString } from './ToDoListComponent';
-import { heads } from './resources/test';
-import server from './util/saveTodo';
+import { heads } from '../util/constance';
+import server from '../util/saveTodo';
 
 interface AddToDoProps {   // 하위 컴포넌트가 삽입되었을때, 연동시키는 부분
     selectDate:Date;

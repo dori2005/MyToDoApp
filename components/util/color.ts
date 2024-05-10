@@ -2,11 +2,15 @@
 //오른쪽이 더 연함
 //파스텔톤 레드   #6AB2ED > FFBAA8
 //파스텔톤 블루   #F37D71 > A9EAFF(형광) = CDE7FF
-//회색          #3A3D40 > AFA8AC > D1CFCF
+//회색          #3A3D40 > AFA8AC > D1CFCF > #EFEBE9
+//바탕색        #FAF8F7 > #EFEBE9 > 
 export const theme = {
     background: "#FAF8F7",
     isCheck: "#3A3D40",
     notCheck: "#EFEBE9",
+
+    selectText: "#3A3D40",
+    hidenText: "#AFA8AC",
 
     todoListContainer: "#EFEBE9", 
     todoDateText: "#3B3839",

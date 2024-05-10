@@ -2,11 +2,11 @@ import Animated, { Extrapolation, interpolate, runOnJS, useAnimatedStyle, useSha
 import { Dimensions, StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import ToDoListComponent, { ToDoListComponentRefProps } from './ToDoListComponent'
+import ToDoListComponent, { ToDoListComponentRefProps } from './todo/ToDoListComponent'
 import { bottomSheetContainerTop, bottomSheetHeight, dayHeaderHeight, focus_height, headerHeight } from './util/size'
-import {focus, heads, property} from './resources/test'
 
-import Calendar from './Calendar'
+import Calendar from './calendar/Calendar'
+import { heads } from './util/constance'
 import { theme } from './util/color'
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window')

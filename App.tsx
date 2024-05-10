@@ -1,7 +1,8 @@
 import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
-import AddScreen from './components/AddScreen';
 import DrawerContent from './components/DrawerContent';
+import GroupAddScreen from './components/group/GroupAddScreen';
+import GroupMenuScreen from './components/group/GroupMenuScreen';
 import { HeaderHeightContext } from '@react-navigation/elements';
 import HomeScreen from './components/HomeScreen';
 import LoginScreen from './components/LoginScreen';
@@ -15,7 +16,9 @@ export type RootStackParamList = {
   Test: undefined;
   Home: undefined;
   Login: undefined;
+  Group: undefined;
   Profile: { userId: string };
+  GroupTest:undefined;
 };
 
 //const Stack = createStackNavigator();
@@ -40,12 +43,30 @@ const StackNav = () => {
         name='Login' 
         component={LoginScreen}
       />
+      <Stack.Screen 
+        name='Group' 
+        options={{
+          title: "그룹 메뉴"
+        }}
+        component={GroupMenuScreen}
+      />
+      <Stack.Screen 
+        name='Test' 
+        component={TestScreen}
+      />
+      <Stack.Screen 
+        name='GroupTest' 
+        options={{
+          title: "그룹 생성"
+        }}
+        component={GroupAddScreen}
+      />
     </Stack.Navigator>
   )
 }
 
 const DrawerNav = () => {
-  const Drawer = createDrawerNavigator<RootStackParamList>();
+  const Drawer = createDrawerNavigator();
   return(
     <Drawer.Navigator 
     drawerContent={props => <DrawerContent {...props}/>}
@@ -53,7 +74,7 @@ const DrawerNav = () => {
       drawerPosition: "right",
       headerShown:false
     }}>
-      <Drawer.Screen name='Home' component={StackNav}/>
+      <Drawer.Screen name='Stack' component={StackNav}/>
     </Drawer.Navigator>
     );
 }

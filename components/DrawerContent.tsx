@@ -16,9 +16,9 @@ interface DrawerListEle {
 
 const DrawerList:DrawerListEle[] = [
   {icon: "home-outline", label: '홈', navigateTo: 'Home'},
-  {icon: "account-multiple", label: '프로필', navigateTo: 'Profile'},
+  {icon: "account-multiple", label: '프로필', navigateTo: 'Test'},
   {icon: "account-group", label: '그룹 메뉴', navigateTo: 'Group'},
-  {icon: "calendar-today", label: '기념일 설정', navigateTo: 'Anniversary'},
+  {icon: "calendar-today", label: '기념일 설정', navigateTo: 'GroupTest'},
 ];
 const DrawerLayout = ({icon, label, navigateTo}:DrawerListEle) => {
   const navigation = useNavigation();

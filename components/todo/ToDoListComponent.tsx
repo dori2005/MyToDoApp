@@ -10,15 +10,15 @@ import {
     View
 } from 'react-native';
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
-import { Schedule, ScheduleData } from './Object/Schedule';
-import { theme, todoPalette } from './util/color';
+import { Schedule, ScheduleData } from '../object/Schedule';
+import { theme, todoPalette } from '../util/color';
 
 import { FontAwesome } from '@expo/vector-icons';
 import Realm from 'realm';
 import { StatusBar } from 'expo-status-bar';
-import { ToDo } from './Object/ToDo';
-import { YM } from './Calendar';
-import server from './util/saveTodo';
+import { ToDo } from '../object/ToDo';
+import { YM } from '../calendar/Calendar';
+import server from '../util/saveTodo';
 import {useQuery} from '@realm/react';
 
 const {height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window')
